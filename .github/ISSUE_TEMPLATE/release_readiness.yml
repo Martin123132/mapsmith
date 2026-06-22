@@ -1,0 +1,54 @@
+name: Release readiness review
+description: Track a future demo-safe Mapsmith release review without publishing anything.
+title: "[Release readiness]: "
+labels:
+  - release-readiness
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this only to prepare a future release. Do not create a public release, upload assets, publish packages, or attach private proof material from this issue alone.
+  - type: checkboxes
+    id: no-publish
+    attributes:
+      label: No-publish posture
+      options:
+        - label: No public release has been created.
+          required: true
+        - label: No package has been published.
+          required: true
+        - label: `package.json` remains `private: true`.
+          required: true
+  - type: checkboxes
+    id: required-checks
+    attributes:
+      label: Required checks
+      options:
+        - label: `npm run check` passes.
+          required: true
+        - label: `npm run verify:examples` passes.
+          required: true
+        - label: `npm run verify:public` passes.
+          required: true
+        - label: `npm audit --omit=dev` reports no vulnerabilities.
+          required: true
+        - label: GitHub Actions is green on `main`.
+          required: true
+  - type: checkboxes
+    id: public-proof
+    attributes:
+      label: Public-safe proof material
+      options:
+        - label: `examples/portable-flow.mapsmith` remains synthetic/demo-only.
+          required: true
+        - label: The checked open/export/save walkthrough is current.
+          required: true
+        - label: SVG/export proof material contains no private paths, secrets, or real customer diagrams.
+          required: true
+        - label: Screenshots, fixtures, and generated examples are demo-safe.
+          required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Review notes
+      description: Capture blockers or follow-up issues. Keep notes public-safe.

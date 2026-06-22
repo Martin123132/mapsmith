@@ -19,6 +19,7 @@ const files = {
   releaseChecklist: await read('docs/RELEASE_CHECKLIST.md'),
   bugIssue: await read('.github/ISSUE_TEMPLATE/bug_report.yml'),
   exportIssue: await read('.github/ISSUE_TEMPLATE/export_import_issue.yml'),
+  releaseIssue: await read('.github/ISSUE_TEMPLATE/release_readiness.yml'),
   issueConfig: await read('.github/ISSUE_TEMPLATE/config.yml'),
   pullRequest: await read('.github/PULL_REQUEST_TEMPLATE.md'),
   ci: await read('.github/workflows/ci.yml'),
@@ -65,8 +66,15 @@ requireIncludes('SECURITY.md', files.security, [
 requireIncludes('docs/RELEASE_CHECKLIST.md', files.releaseChecklist, [
   'Do not publish a release',
   'npm run check',
+  'npm run verify:examples',
+  'npm run verify:public',
   'npm audit --omit=dev',
+  'package.json` remains `private: true',
+  'No public release, package publish, or asset upload',
+  'examples/portable-flow.mapsmith',
+  'checked open/export/save walkthrough',
   'CI is green on `main`',
+  'release readiness issue template',
   'Release notes do not mention private branches',
 ])
 
@@ -85,6 +93,19 @@ requireIncludes('export/import issue template', files.exportIssue, [
   'Export PNG',
   'demo-safe',
   'npm run verify:board',
+])
+
+requireIncludes('release readiness issue template', files.releaseIssue, [
+  'name: Release readiness review',
+  'No public release has been created.',
+  'No package has been published.',
+  '`package.json` remains `private: true`.',
+  '`npm run check` passes.',
+  '`npm run verify:examples` passes.',
+  '`npm run verify:public` passes.',
+  '`npm audit --omit=dev` reports no vulnerabilities.',
+  'examples/portable-flow.mapsmith',
+  'SVG/export proof material contains no private paths, secrets, or real customer diagrams.',
 ])
 
 requireIncludes('issue template config', files.issueConfig, [
