@@ -8,6 +8,7 @@ Mapsmith is early, but the direction is simple: a fast, local-first diagram edit
 - Keep direct SVG export deterministic and demo-safe.
 - Preserve `.mapsmith` save/open compatibility.
 - Keep board JSON round-trips covered by a deterministic fixture.
+- Keep public examples synthetic, path-free, and parser-verified.
 - Keep legacy `.canvasforge` imports working.
 - Maintain green CI for lint and production builds.
 

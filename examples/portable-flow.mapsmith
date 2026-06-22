@@ -1,0 +1,95 @@
+{
+  "type": "canvasforge-board",
+  "version": 1,
+  "board": {
+    "name": "Mapsmith sample: portable workflow",
+    "nodes": [
+      {
+        "id": "sample-title",
+        "kind": "text",
+        "x": 40,
+        "y": 8,
+        "width": 420,
+        "height": 54,
+        "fill": "#ffffff",
+        "stroke": "#ffffff",
+        "text": "Portable Mapsmith Board",
+        "fontSize": 34
+      },
+      {
+        "id": "draft",
+        "kind": "rectangle",
+        "x": 64,
+        "y": 132,
+        "width": 190,
+        "height": 88,
+        "fill": "#fff4d6",
+        "stroke": "#111827",
+        "text": "Draft locally",
+        "fontSize": 20
+      },
+      {
+        "id": "check",
+        "kind": "diamond",
+        "x": 330,
+        "y": 112,
+        "width": 190,
+        "height": 128,
+        "fill": "#dff3ff",
+        "stroke": "#26547c",
+        "text": "Check exports",
+        "fontSize": 19
+      },
+      {
+        "id": "share",
+        "kind": "rectangle",
+        "x": 594,
+        "y": 132,
+        "width": 220,
+        "height": 88,
+        "fill": "#dcfce7",
+        "stroke": "#14532d",
+        "text": "Share demo-safe file",
+        "fontSize": 19
+      },
+      {
+        "id": "open",
+        "kind": "ellipse",
+        "x": 360,
+        "y": 310,
+        "width": 220,
+        "height": 96,
+        "fill": "#fce7f3",
+        "stroke": "#831843",
+        "text": "Open anywhere",
+        "fontSize": 20
+      }
+    ],
+    "connectors": [
+      {
+        "id": "draft-to-check",
+        "from": "draft",
+        "to": "check",
+        "fromPort": "east",
+        "toPort": "west",
+        "stroke": "#26547c"
+      },
+      {
+        "id": "check-to-share",
+        "from": "check",
+        "to": "share",
+        "fromPort": "east",
+        "toPort": "west",
+        "stroke": "#0f8b62"
+      },
+      {
+        "id": "check-to-open",
+        "from": "check",
+        "to": "open",
+        "fromPort": "south",
+        "toPort": "north",
+        "stroke": "#831843"
+      }
+    ]
+  }
+}
