@@ -2,7 +2,7 @@
 
 Use this before creating a public Mapsmith release. Do not publish a release until every required item is checked.
 
-Record dry-run outcomes with [RELEASE_DRY_RUN_EVIDENCE.md](RELEASE_DRY_RUN_EVIDENCE.md).
+Record dry-run outcomes with [RELEASE_DRY_RUN_EVIDENCE.md](RELEASE_DRY_RUN_EVIDENCE.md), or generate a prefilled copy with `npm run release:dry-run:evidence`.
 
 ## Scope
 

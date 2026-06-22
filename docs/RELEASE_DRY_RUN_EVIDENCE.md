@@ -2,6 +2,18 @@
 
 Use this template to record a future first-release dry run. This file is a checklist template only; filling it out does not create a release, upload assets, tag a commit, or publish a package.
 
+Generate a prefilled copy with:
+
+```bash
+npm run release:dry-run:evidence
+```
+
+For clean redirection:
+
+```bash
+npm --silent run release:dry-run:evidence > release-dry-run-evidence.md
+```
+
 ## Dry-Run Scope
 
 - Date:

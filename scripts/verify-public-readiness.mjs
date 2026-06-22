@@ -18,6 +18,7 @@ const files = {
   security: await read('SECURITY.md'),
   releaseChecklist: await read('docs/RELEASE_CHECKLIST.md'),
   releaseDryRun: await read('docs/RELEASE_DRY_RUN_EVIDENCE.md'),
+  releaseDryRunGenerator: await read('scripts/generate-release-dry-run-evidence.mjs'),
   bugIssue: await read('.github/ISSUE_TEMPLATE/bug_report.yml'),
   exportIssue: await read('.github/ISSUE_TEMPLATE/export_import_issue.yml'),
   releaseIssue: await read('.github/ISSUE_TEMPLATE/release_readiness.yml'),
@@ -35,6 +36,10 @@ if (packageData.license !== 'AGPL-3.0-only') {
 
 if (packageData.private !== true) {
   failures.push('package.json must remain private until an explicit package publishing decision')
+}
+
+if (packageData.scripts?.['release:dry-run:evidence'] !== 'node scripts/generate-release-dry-run-evidence.mjs') {
+  failures.push('package.json must keep release:dry-run:evidence alias')
 }
 
 requireIncludes('README.md', files.readme, [
@@ -67,6 +72,7 @@ requireIncludes('SECURITY.md', files.security, [
 requireIncludes('docs/RELEASE_CHECKLIST.md', files.releaseChecklist, [
   'Do not publish a release',
   'RELEASE_DRY_RUN_EVIDENCE.md',
+  'npm run release:dry-run:evidence',
   'npm run check',
   'npm run verify:examples',
   'npm run verify:public',
@@ -84,6 +90,7 @@ requireIncludes('docs/RELEASE_CHECKLIST.md', files.releaseChecklist, [
 requireIncludes('docs/RELEASE_DRY_RUN_EVIDENCE.md', files.releaseDryRun, [
   'Release Dry-Run Evidence',
   'filling it out does not create a release',
+  'npm run release:dry-run:evidence',
   'GitHub CI URL:',
   '`npm run verify:examples`',
   '`npm run verify:public`',
@@ -97,6 +104,24 @@ requireIncludes('docs/RELEASE_DRY_RUN_EVIDENCE.md', files.releaseDryRun, [
   'No git tag was created.',
   'No package was published.',
   '`package.json` remains `private: true`.',
+])
+
+requireIncludes('scripts/generate-release-dry-run-evidence.mjs', files.releaseDryRunGenerator, [
+  'Release Dry-Run Evidence',
+  'npm run release:dry-run:evidence',
+  'GitHub CI URL: <paste GitHub Actions run URL>',
+  '\\`npm run verify:examples\\`',
+  '\\`npm run verify:public\\`',
+  '\\`npm audit --omit=dev\\`',
+  '\\`npm run check\\`',
+  'examples/portable-flow.mapsmith',
+  'SVG/export proof contains only synthetic labels.',
+  'no private paths, secrets, credentials, tokens, private URLs, or real customer diagrams',
+  'No public release was created.',
+  'No release assets were uploaded.',
+  'No git tag was created.',
+  'No package was published.',
+  '\\`package.json\\` remains \\`private: true\\`.',
 ])
 
 requireIncludes('bug issue template', files.bugIssue, [

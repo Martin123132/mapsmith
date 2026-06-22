@@ -9,6 +9,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "release:dry-run:evidence": "node scripts/generate-release-dry-run-evidence.mjs",
     "check": "npm run lint && npm run build && npm run verify:svg && npm run verify:board && npm run verify:examples && npm run verify:public",
     "audit": "npm audit --audit-level=moderate",
     "verify:board": "tsc --ignoreConfig --target ES2023 --module NodeNext --moduleResolution NodeNext --outDir node_modules/.tmp/board-roundtrip-check --rootDir . scripts/verify-board-roundtrip.ts src/boardFile.ts && node node_modules/.tmp/board-roundtrip-check/scripts/verify-board-roundtrip.js",
