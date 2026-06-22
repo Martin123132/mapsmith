@@ -2,7 +2,7 @@
   "name": "mapsmith",
   "private": true,
   "version": "0.0.0",
-  "description": "Local-first SVG diagram and whiteboard prototype.",
+  "description": "Local-first open-source SVG diagram editor.",
   "license": "AGPL-3.0-only",
   "type": "module",
   "scripts": {

@@ -1496,7 +1496,7 @@ function App() {
       </section>
 
       <footer className="statusbar">
-        <span>D:\Codex\revenge-tour\mapsmith</span>
+        <span>github.com/Martin123132/mapsmith</span>
         <span>AGPL app shell, native SVG engine</span>
         <span>{status}</span>
       </footer>
