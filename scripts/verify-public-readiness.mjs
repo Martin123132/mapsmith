@@ -17,6 +17,7 @@ const files = {
   contributing: await read('CONTRIBUTING.md'),
   security: await read('SECURITY.md'),
   releaseChecklist: await read('docs/RELEASE_CHECKLIST.md'),
+  releaseDryRun: await read('docs/RELEASE_DRY_RUN_EVIDENCE.md'),
   bugIssue: await read('.github/ISSUE_TEMPLATE/bug_report.yml'),
   exportIssue: await read('.github/ISSUE_TEMPLATE/export_import_issue.yml'),
   releaseIssue: await read('.github/ISSUE_TEMPLATE/release_readiness.yml'),
@@ -65,10 +66,12 @@ requireIncludes('SECURITY.md', files.security, [
 
 requireIncludes('docs/RELEASE_CHECKLIST.md', files.releaseChecklist, [
   'Do not publish a release',
+  'RELEASE_DRY_RUN_EVIDENCE.md',
   'npm run check',
   'npm run verify:examples',
   'npm run verify:public',
   'npm audit --omit=dev',
+  'GitHub CI URL is recorded in the dry-run evidence.',
   'package.json` remains `private: true',
   'No public release, package publish, or asset upload',
   'examples/portable-flow.mapsmith',
@@ -76,6 +79,24 @@ requireIncludes('docs/RELEASE_CHECKLIST.md', files.releaseChecklist, [
   'CI is green on `main`',
   'release readiness issue template',
   'Release notes do not mention private branches',
+])
+
+requireIncludes('docs/RELEASE_DRY_RUN_EVIDENCE.md', files.releaseDryRun, [
+  'Release Dry-Run Evidence',
+  'filling it out does not create a release',
+  'GitHub CI URL:',
+  '`npm run verify:examples`',
+  '`npm run verify:public`',
+  '`npm audit --omit=dev`',
+  '`npm run check`',
+  'examples/portable-flow.mapsmith',
+  'SVG/export proof contains only synthetic labels.',
+  'no private paths, secrets, credentials, tokens, private URLs, or real customer diagrams',
+  'No public release was created.',
+  'No release assets were uploaded.',
+  'No git tag was created.',
+  'No package was published.',
+  '`package.json` remains `private: true`.',
 ])
 
 requireIncludes('bug issue template', files.bugIssue, [

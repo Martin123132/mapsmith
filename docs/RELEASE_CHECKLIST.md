@@ -2,6 +2,8 @@
 
 Use this before creating a public Mapsmith release. Do not publish a release until every required item is checked.
 
+Record dry-run outcomes with [RELEASE_DRY_RUN_EVIDENCE.md](RELEASE_DRY_RUN_EVIDENCE.md).
+
 ## Scope
 
 - [ ] Release goal is clear and demo-safe.
@@ -18,6 +20,7 @@ Use this before creating a public Mapsmith release. Do not publish a release unt
 - [ ] `npm run verify:examples`
 - [ ] `npm run verify:public`
 - [ ] `npm audit --omit=dev`
+- [ ] GitHub CI URL is recorded in the dry-run evidence.
 - [ ] Rendered smoke: app loads without console/page errors.
 - [ ] Save/Open smoke: `.mapsmith` board downloads and imports successfully.
 - [ ] Export smoke: SVG and PNG exports contain only demo-safe content.
