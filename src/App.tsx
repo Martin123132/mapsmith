@@ -24,10 +24,10 @@ import type {
   PointerEvent as ReactPointerEvent,
 } from 'react'
 import './App.css'
+import { createSvgExport } from './svgExport'
 
 const BOARD_VERSION = 1
 const boardName = 'Mapsmith demo board'
-const svgNamespace = 'http://www.w3.org/2000/svg'
 
 type ShapeKind = 'rectangle' | 'diamond' | 'ellipse' | 'text'
 type Tool = 'select' | 'pan' | ShapeKind | 'connector'
@@ -1080,27 +1080,13 @@ function App() {
   }, [])
 
   const exportPng = useCallback(async () => {
-    const svg = canvasRef.current
-    if (!svg) {
+    if (!canvasRef.current) {
       setStatus('Canvas not ready')
       return
     }
 
     const bounds = getBounds(board.nodes)
-    const clone = svg.cloneNode(true) as SVGSVGElement
-    clone.setAttribute('width', `${Math.round(bounds.width)}`)
-    clone.setAttribute('height', `${Math.round(bounds.height)}`)
-    clone.setAttribute('viewBox', `${bounds.x} ${bounds.y} ${bounds.width} ${bounds.height}`)
-    clone
-      .querySelectorAll('.selection-box, .selection-halo, .resize-handle, .connector-port')
-      .forEach((element) => element.remove())
-
-    const style = document.createElementNS(svgNamespace, 'style')
-    style.textContent =
-      '.node-label{font-family:Inter,Segoe UI,sans-serif;font-weight:700}.canvas-title{font-family:Inter,Segoe UI,sans-serif;font-weight:800}'
-    clone.insertBefore(style, clone.firstChild)
-
-    const source = new XMLSerializer().serializeToString(clone)
+    const source = createSvgExport(board)
     const image = new Image()
     const url = URL.createObjectURL(
       new Blob([source], { type: 'image/svg+xml;charset=utf-8' }),
@@ -1137,6 +1123,19 @@ function App() {
     setStatus('PNG export prepared')
   }, [board])
 
+  const exportSvg = useCallback(() => {
+    if (!canvasRef.current) {
+      setStatus('Canvas not ready')
+      return
+    }
+
+    downloadBlob(
+      new Blob([createSvgExport(board)], { type: 'image/svg+xml;charset=utf-8' }),
+      `${safeFileStem(board.name)}.svg`,
+    )
+    setStatus('SVG export prepared')
+  }, [board])
+
   const zoomLabel = `${Math.round(view.zoom * 100)}%`
 
   return (
@@ -1164,6 +1163,10 @@ function App() {
           <button type="button" onClick={exportPng} title="Export PNG">
             <ImageDown size={17} />
             <span>PNG</span>
+          </button>
+          <button type="button" onClick={exportSvg} title="Export SVG">
+            <FileInput size={17} />
+            <span>SVG</span>
           </button>
           <button type="button" onClick={resetBoard} title="Reset demo board">
             <RefreshCcw size={17} />
@@ -1485,7 +1488,7 @@ function App() {
             </li>
             <li data-state="active">
               <span>03</span>
-              <strong>PNG export</strong>
+              <strong>PNG/SVG export</strong>
             </li>
             <li>
               <span>04</span>

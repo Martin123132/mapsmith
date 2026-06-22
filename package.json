@@ -9,8 +9,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "check": "npm run lint && npm run build",
+    "check": "npm run lint && npm run build && npm run verify:svg",
     "audit": "npm audit --audit-level=moderate",
+    "verify:svg": "tsc --ignoreConfig --target ES2023 --module NodeNext --moduleResolution NodeNext --outDir node_modules/.tmp/svg-export-check --rootDir . scripts/verify-svg-export.ts src/svgExport.ts && node node_modules/.tmp/svg-export-check/scripts/verify-svg-export.js",
     "preview": "vite preview"
   },
   "dependencies": {

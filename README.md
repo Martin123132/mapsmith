@@ -10,7 +10,7 @@ Mapsmith is a local-first, open-source diagram editor for fast visual maps, whit
 
 - Local-first boards: save and reopen `.mapsmith` files from your machine.
 - Native SVG canvas: shapes, labels, connector lines, ports, pan, zoom, and keyboard controls.
-- Practical exports: save board JSON and export PNG snapshots.
+- Practical exports: save board JSON and export PNG or SVG snapshots.
 - No account requirement: the core editor is designed to work without cloud lock-in.
 - Open-source posture: AGPL-3.0-only, with a public roadmap and visible CI.
 
@@ -23,7 +23,7 @@ Mapsmith currently includes:
 - Named connector ports for north, east, south, and west attachment points
 - Shortcut help overlay for selection, nudge, resize, ports, save, open, and export
 - Local `.mapsmith` save/open flow with legacy `.canvasforge` import support
-- PNG export
+- PNG and SVG export
 - Responsive editor layout for desktop and small screens
 
 ![Mapsmith keyboard shortcut overlay](docs/screenshots/mapsmith-shortcuts.png)
@@ -38,7 +38,7 @@ The short version:
 
 - Improve connector routing and label editing
 - Add richer board templates and example diagrams
-- Add SVG export alongside PNG export
+- Improve export naming and add more fixture coverage
 - Add import/export hardening tests
 - Package a stable first public release
 
@@ -64,6 +64,7 @@ Run repository checks:
 npm run lint
 npm run build
 npm run audit
+npm run verify:svg
 ```
 
 For a production-like local smoke after `npm run build`:
