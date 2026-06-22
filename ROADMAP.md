@@ -7,6 +7,7 @@ Mapsmith is early, but the direction is simple: a fast, local-first diagram edit
 - Keep native SVG editing responsive and predictable.
 - Keep direct SVG export deterministic and demo-safe.
 - Preserve `.mapsmith` save/open compatibility.
+- Keep board JSON round-trips covered by a deterministic fixture.
 - Keep legacy `.canvasforge` imports working.
 - Maintain green CI for lint and production builds.
 
@@ -15,7 +16,7 @@ Mapsmith is early, but the direction is simple: a fast, local-first diagram edit
 - Connector polish: clearer routing, label editing, and attachment feedback.
 - Export polish: improve PNG/SVG naming and expand fixture coverage.
 - Template boards: flowchart, system map, process map, and blank whiteboard starters.
-- Test coverage: import/export fixtures, keyboard controls, and connector port behavior.
+- Test coverage: more import/export edge cases, keyboard controls, and connector port behavior.
 - Documentation: short usage clips, contributor setup, and architecture notes.
 
 ## Later

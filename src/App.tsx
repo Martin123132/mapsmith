@@ -24,47 +24,13 @@ import type {
   PointerEvent as ReactPointerEvent,
 } from 'react'
 import './App.css'
+import { parseBoardFileText, serializeBoardFile } from './boardFile'
+import type { Board, Connector, DiagramNode, PortName, ShapeKind } from './boardFile'
 import { createSvgExport } from './svgExport'
 
-const BOARD_VERSION = 1
 const boardName = 'Mapsmith demo board'
 
-type ShapeKind = 'rectangle' | 'diamond' | 'ellipse' | 'text'
 type Tool = 'select' | 'pan' | ShapeKind | 'connector'
-
-type DiagramNode = {
-  id: string
-  kind: ShapeKind
-  x: number
-  y: number
-  width: number
-  height: number
-  fill: string
-  stroke: string
-  text: string
-  fontSize: number
-}
-
-type Connector = {
-  id: string
-  from: string
-  to: string
-  fromPort?: PortName
-  toPort?: PortName
-  stroke: string
-}
-
-type Board = {
-  name: string
-  nodes: DiagramNode[]
-  connectors: Connector[]
-}
-
-type BoardFile = {
-  type: 'canvasforge-board'
-  version: typeof BOARD_VERSION
-  board: Board
-}
 
 type View = {
   x: number
@@ -98,7 +64,6 @@ type Point = {
   y: number
 }
 
-type PortName = 'north' | 'east' | 'south' | 'west'
 type ResizeHandle = 'nw' | 'ne' | 'se' | 'sw'
 
 const portLabels: Record<PortName, string> = {
@@ -513,32 +478,6 @@ const downloadBlob = (blob: Blob, filename: string) => {
   anchor.click()
   anchor.remove()
   window.setTimeout(() => URL.revokeObjectURL(url), 30000)
-}
-
-const serializeBoard = (board: Board): string =>
-  JSON.stringify(
-    {
-      type: 'canvasforge-board',
-      version: BOARD_VERSION,
-      board: normalizeBoard(board),
-    } satisfies BoardFile,
-    null,
-    2,
-  )
-
-const isBoardFile = (data: unknown): data is BoardFile => {
-  if (!data || typeof data !== 'object') {
-    return false
-  }
-
-  const candidate = data as Partial<BoardFile>
-  return (
-    candidate.type === 'canvasforge-board' &&
-    candidate.version === BOARD_VERSION &&
-    !!candidate.board &&
-    Array.isArray(candidate.board.nodes) &&
-    Array.isArray(candidate.board.connectors)
-  )
 }
 
 const createNode = (kind: ShapeKind, point: { x: number; y: number }): DiagramNode => {
@@ -1033,7 +972,7 @@ function App() {
 
   const saveBoard = useCallback(() => {
     downloadBlob(
-      new Blob([serializeBoard(board)], { type: 'application/json' }),
+      new Blob([serializeBoardFile(normalizeBoard(board))], { type: 'application/json' }),
       `${safeFileStem(board.name)}.mapsmith`,
     )
     setStatus('Board file prepared')
@@ -1052,13 +991,10 @@ function App() {
 
     try {
       const text = await file.text()
-      const parsed: unknown = JSON.parse(text)
-      if (!isBoardFile(parsed)) {
-        throw new Error('Invalid Mapsmith board')
-      }
+      const parsedBoard = parseBoardFileText(text)
 
-      setBoard(normalizeBoard(parsed.board))
-      setSelectedId(parsed.board.nodes[0]?.id ?? '')
+      setBoard(normalizeBoard(parsedBoard))
+      setSelectedId(parsedBoard.nodes[0]?.id ?? '')
       setSelectedConnectorId('')
       setConnectorStartId(null)
       setStatus('Board loaded')

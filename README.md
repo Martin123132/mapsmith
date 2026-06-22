@@ -23,6 +23,7 @@ Mapsmith currently includes:
 - Named connector ports for north, east, south, and west attachment points
 - Shortcut help overlay for selection, nudge, resize, ports, save, open, and export
 - Local `.mapsmith` save/open flow with legacy `.canvasforge` import support
+- Deterministic board JSON round-trip verification
 - PNG and SVG export
 - Responsive editor layout for desktop and small screens
 
@@ -64,6 +65,7 @@ Run repository checks:
 npm run lint
 npm run build
 npm run audit
+npm run verify:board
 npm run verify:svg
 ```
 
