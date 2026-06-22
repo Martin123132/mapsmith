@@ -40,6 +40,7 @@ requireIncludes('README.md', files.readme, [
   '[SECURITY.md](SECURITY.md)',
   '[docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md)',
   '[examples/](examples/)',
+  '[open/export/save walkthrough](examples/WALKTHROUGH.md)',
   'npm run verify:examples',
   'AGPL-3.0-only',
   'local-first',

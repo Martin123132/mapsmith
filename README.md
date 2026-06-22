@@ -33,7 +33,7 @@ Mapsmith currently includes:
 
 New saves use the `.mapsmith` extension. The JSON board payload intentionally keeps the legacy `canvasforge-board` type marker so existing `.canvasforge` files continue to import without migration.
 
-See [examples/](examples/) for a tiny synthetic `.mapsmith` board that demonstrates the portable JSON format.
+See [examples/](examples/) for a tiny synthetic `.mapsmith` board and checked [open/export/save walkthrough](examples/WALKTHROUGH.md).
 
 ## Roadmap
 

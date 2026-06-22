@@ -15,6 +15,8 @@ This folder contains small, synthetic `.mapsmith` boards that are safe to use in
 
 The example contains no private diagrams, credentials, customer data, local machine paths, or internal URLs.
 
+See [WALKTHROUGH.md](WALKTHROUGH.md) for the checked open/export/save flow.
+
 ## Checking Examples
 
 Run:

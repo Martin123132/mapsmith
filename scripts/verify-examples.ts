@@ -3,7 +3,9 @@ import { parseBoardFileText, serializeBoardFile } from '../src/boardFile.js'
 import { createSvgExport } from '../src/svgExport.js'
 
 const samplePath = 'examples/portable-flow.mapsmith'
+const walkthroughPath = 'examples/WALKTHROUGH.md'
 const sampleText = await readFile(samplePath, 'utf8')
+const walkthroughText = await readFile(walkthroughPath, 'utf8')
 const board = parseBoardFileText(sampleText)
 const canonical = serializeBoardFile(board)
 
@@ -33,6 +35,20 @@ const requiredSvg = [
   'marker-end="url(#mapsmith-arrowhead)"',
 ]
 
+const requiredWalkthrough = [
+  'portable-flow.mapsmith',
+  'Open the Sample Board',
+  'Export SVG',
+  'Re-Save the Board',
+  'npm run verify:examples',
+  'type: "canvasforge-board"',
+  'version: 1',
+  'local paths',
+  'credentials',
+  'tokens',
+  'passwords',
+]
+
 const forbidden = [
   'D:\\',
   'C:\\',
@@ -55,6 +71,12 @@ for (const expected of requiredJson) {
 for (const expected of requiredSvg) {
   if (!svg.includes(expected)) {
     throw new Error(`${samplePath} SVG proof missing expected content: ${expected}`)
+  }
+}
+
+for (const expected of requiredWalkthrough) {
+  if (!walkthroughText.includes(expected)) {
+    throw new Error(`${walkthroughPath} missing expected walkthrough content: ${expected}`)
   }
 }
 
