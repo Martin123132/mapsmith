@@ -1,0 +1,47 @@
+name: Export or import issue
+description: Report a problem with .mapsmith, SVG, or PNG export/import.
+title: "[Export/import]: "
+labels:
+  - export
+  - import
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please use demo-safe files only. Do not attach private boards, credentials, internal diagrams, private URLs, or files containing local paths unless the path itself is the bug.
+  - type: dropdown
+    id: flow
+    attributes:
+      label: Affected flow
+      options:
+        - Save .mapsmith
+        - Open .mapsmith
+        - Import legacy .canvasforge
+        - Export SVG
+        - Export PNG
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the export/import problem.
+    validations:
+      required: true
+  - type: textarea
+    id: minimal-board
+    attributes:
+      label: Minimal public-safe board
+      description: Attach or paste the smallest sanitized file/content that reproduces the issue.
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: checks
+    attributes:
+      label: Checks tried
+      description: Mention whether `npm run check`, `npm run verify:board`, or `npm run verify:svg` reproduces or misses the issue.

@@ -1,0 +1,55 @@
+name: Bug report
+description: Report a reproducible Mapsmith editor problem.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Mapsmith. Please keep reports public-safe: do not include private diagrams, credentials, tokens, customer data, or local machine paths that are not needed.
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: Paste the Mapsmith commit, branch, or release if known.
+      placeholder: "main @ b8352af"
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the visible problem.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the smallest steps that trigger the issue.
+      placeholder: |
+        1. Open Mapsmith
+        2. Select the connector tool
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Chromium / Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Other
+  - type: textarea
+    id: safe-assets
+    attributes:
+      label: Public-safe screenshots or files
+      description: Attach only sanitized screenshots or minimal demo `.mapsmith` files.

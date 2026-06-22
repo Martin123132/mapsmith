@@ -47,6 +47,8 @@ See [ROADMAP.md](ROADMAP.md) for the focused public roadmap.
 
 ## Development
 
+Contributor guidance lives in [CONTRIBUTING.md](CONTRIBUTING.md). Security reporting guidance lives in [SECURITY.md](SECURITY.md).
+
 Install dependencies:
 
 ```bash
@@ -84,3 +86,5 @@ The editor is designed around desktop creation, but the shell should remain read
 ## License
 
 Mapsmith is licensed under [AGPL-3.0-only](LICENSE).
+
+Future release preparation is tracked in [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md).

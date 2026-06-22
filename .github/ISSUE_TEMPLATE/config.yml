@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Mapsmith roadmap
+    url: https://github.com/Martin123132/mapsmith/blob/main/ROADMAP.md
+    about: Check current direction before opening broad feature requests.
