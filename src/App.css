@@ -69,6 +69,25 @@
   white-space: nowrap;
 }
 
+.board-title-field {
+  max-width: 42vw;
+  min-width: 0;
+  width: 100%;
+  margin: 4px 0 0;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid #cfd6e2;
+  border-radius: 6px;
+  color: #111827;
+  background: #ffffff;
+  font: 700 12px/26px var(--ui-font);
+}
+
+.board-title-field:focus-visible {
+  outline: 3px solid rgba(255, 107, 53, 0.3);
+  outline-offset: 2px;
+}
+
 .command-strip {
   display: flex;
   align-items: center;
@@ -664,6 +683,77 @@
 .track-list li[data-state='active'] span {
   color: #ffffff;
   background: var(--accent);
+}
+
+.export-metadata {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid #e5eaf2;
+}
+
+.export-metadata h3 {
+  margin: 0;
+  color: #182230;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.metadata-list {
+  display: grid;
+  gap: 10px;
+  margin: 10px 0 0;
+}
+
+.metadata-list div {
+  display: grid;
+  gap: 5px;
+}
+
+.metadata-list dt {
+  color: #667085;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.metadata-list dd {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  min-width: 0;
+}
+
+.metadata-list dd span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #111827;
+  font-size: 12px;
+  font-weight: 720;
+  line-height: 1.1;
+}
+
+.metadata-list button {
+  border: 1px solid #d9dee8;
+  border-radius: 7px;
+  background: #fff;
+  color: #344054;
+  cursor: pointer;
+  font: 800 11px/1 var(--ui-font);
+  height: 28px;
+  padding: 0 8px;
+}
+
+.metadata-list button:hover {
+  border-color: #b9c3d3;
+  background: #f8fafc;
+}
+
+.metadata-list button:focus-visible {
+  outline: 3px solid rgba(255, 107, 53, 0.3);
+  outline-offset: 2px;
 }
 
 .statusbar {

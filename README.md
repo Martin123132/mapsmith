@@ -10,7 +10,8 @@ Mapsmith is a local-first, open-source diagram editor for fast visual maps, whit
 
 - Local-first boards: save and reopen `.mapsmith` files from your machine.
 - Native SVG canvas: shapes, labels, connector lines, ports, pan, zoom, and keyboard controls.
-- Practical exports: save board JSON and export PNG or SVG snapshots.
+- Practical exports: save board JSON and export PNG or SVG snapshots with
+  timestamped, board-aware filenames.
 - No account requirement: the core editor is designed to work without cloud lock-in.
 - Open-source posture: AGPL-3.0-only, with a public roadmap and visible CI.
 
@@ -24,7 +25,8 @@ Mapsmith currently includes:
 - Shortcut help overlay for selection, nudge, resize, ports, save, open, and export
 - Local `.mapsmith` save/open flow with legacy `.canvasforge` import support
 - Deterministic board JSON round-trip verification
-- PNG and SVG export
+- PNG and SVG export with board-aware, timestamped filenames
+- Inline board title editing (keeps exported names aligned to the active board)
 - Responsive editor layout for desktop and small screens
 
 ![Mapsmith keyboard shortcut overlay](docs/screenshots/mapsmith-shortcuts.png)

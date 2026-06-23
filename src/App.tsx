@@ -242,6 +242,15 @@ const nowLabel = () =>
     second: '2-digit',
   }).format(new Date())
 
+const exportTimeStem = () =>
+  new Date().toISOString().replace(/T/g, '-').replace(/\..+?$/, '').replace(/:/g, '-')
+
+const buildExportNames = (name: string, stamp: string) => ({
+  mapsmith: `${safeFileStem(name)}-${stamp}.mapsmith`,
+  png: `${safeFileStem(name)}-${stamp}.png`,
+  svg: `${safeFileStem(name)}-${stamp}.svg`,
+})
+
 const centerOf = (node: DiagramNode) => ({
   x: node.x + node.width / 2,
   y: node.y + node.height / 2,
@@ -531,6 +540,7 @@ function App() {
   const [lastChanged, setLastChanged] = useState('Not edited')
   const [canvasSize, setCanvasSize] = useState({ width: 960, height: 620 })
   const [showShortcuts, setShowShortcuts] = useState(false)
+  const [boardTitleDraft, setBoardTitleDraft] = useState(boardName)
 
   const selectedNode = useMemo(
     () => board.nodes.find((node) => node.id === selectedId) ?? null,
@@ -541,7 +551,6 @@ function App() {
     [board.connectors, selectedConnectorId],
   )
 
-  const boardTitle = board.name
   const elementCount = board.nodes.length + board.connectors.length
   const nodeMap = useMemo(
     () => new Map(board.nodes.map((node) => [node.id, node])),
@@ -562,6 +571,10 @@ function App() {
   }, [nodeMap, selectedConnector])
   const visibleWidth = canvasSize.width / view.zoom
   const visibleHeight = canvasSize.height / view.zoom
+  const previewExportNames = useMemo(
+    () => buildExportNames(board.name, exportTimeStem()),
+    [board],
+  )
 
   useEffect(() => {
     const svg = canvasRef.current
@@ -593,10 +606,35 @@ function App() {
     }
   }, [])
 
+  const copyExportName = useCallback(async (label: string, filename: string) => {
+    if (!navigator.clipboard) {
+      setStatus(`Clipboard not available for ${label}`)
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(filename)
+      setStatus(`${label} filename copied`)
+    } catch {
+      setStatus(`Could not copy ${label} filename`)
+    }
+  }, [])
+
   const markChanged = useCallback((nextStatus = 'Edited in memory') => {
     setLastChanged(nowLabel())
     setStatus(nextStatus)
   }, [])
+
+  const applyBoardTitle = useCallback(() => {
+    const nextName = boardTitleDraft.trim() || 'Mapsmith board'
+    if (nextName === board.name) {
+      return
+    }
+
+    setBoard((current) => ({ ...current, name: nextName }))
+    setBoardTitleDraft(nextName)
+    markChanged('Board title updated')
+  }, [board.name, boardTitleDraft, markChanged])
 
   const removeConnector = useCallback(
     (connectorId: string) => {
@@ -971,9 +1009,11 @@ function App() {
   )
 
   const saveBoard = useCallback(() => {
+    const seed = exportTimeStem()
+    const nextNames = buildExportNames(board.name, seed)
     downloadBlob(
       new Blob([serializeBoardFile(normalizeBoard(board))], { type: 'application/json' }),
-      `${safeFileStem(board.name)}.mapsmith`,
+      nextNames.mapsmith,
     )
     setStatus('Board file prepared')
   }, [board])
@@ -994,6 +1034,7 @@ function App() {
       const parsedBoard = parseBoardFileText(text)
 
       setBoard(normalizeBoard(parsedBoard))
+      setBoardTitleDraft(parsedBoard.name)
       setSelectedId(parsedBoard.nodes[0]?.id ?? '')
       setSelectedConnectorId('')
       setConnectorStartId(null)
@@ -1007,6 +1048,7 @@ function App() {
   const resetBoard = useCallback(() => {
     const nextBoard = normalizeBoard(createDemoBoard())
     setBoard(nextBoard)
+    setBoardTitleDraft(nextBoard.name)
     setSelectedId('local-first')
     setSelectedConnectorId('')
     setConnectorStartId(null)
@@ -1016,6 +1058,9 @@ function App() {
   }, [])
 
   const exportPng = useCallback(async () => {
+    const seed = exportTimeStem()
+    const nextNames = buildExportNames(board.name, seed)
+
     if (!canvasRef.current) {
       setStatus('Canvas not ready')
       return
@@ -1055,11 +1100,14 @@ function App() {
       return
     }
 
-    downloadBlob(blob, `${safeFileStem(board.name)}.png`)
+    downloadBlob(blob, nextNames.png)
     setStatus('PNG export prepared')
   }, [board])
 
   const exportSvg = useCallback(() => {
+    const seed = exportTimeStem()
+    const nextNames = buildExportNames(board.name, seed)
+
     if (!canvasRef.current) {
       setStatus('Canvas not ready')
       return
@@ -1067,7 +1115,7 @@ function App() {
 
     downloadBlob(
       new Blob([createSvgExport(board)], { type: 'image/svg+xml;charset=utf-8' }),
-      `${safeFileStem(board.name)}.svg`,
+      nextNames.svg,
     )
     setStatus('SVG export prepared')
   }, [board])
@@ -1083,7 +1131,19 @@ function App() {
           </span>
           <div>
             <h1>Mapsmith</h1>
-            <p>{boardTitle}</p>
+            <input
+              aria-label="Board title"
+              className="board-title-field"
+              value={boardTitleDraft}
+              onChange={(event) => setBoardTitleDraft(event.target.value)}
+              onBlur={applyBoardTitle}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  applyBoardTitle()
+                }
+              }}
+            />
           </div>
         </div>
 
@@ -1431,6 +1491,51 @@ function App() {
               <strong>Self-host rooms</strong>
             </li>
           </ol>
+          <section className="export-metadata" aria-label="Export metadata">
+            <h3>Current Files</h3>
+            <dl className="metadata-list">
+              <div>
+                <dt>Board</dt>
+                <dd>{board.name || 'Mapsmith board'}</dd>
+              </div>
+              <div>
+                <dt>Maps file</dt>
+                <dd>
+                  <span>{previewExportNames.mapsmith}</span>
+                  <button
+                    type="button"
+                    onClick={() => copyExportName('Maps file', previewExportNames.mapsmith)}
+                  >
+                    Copy
+                  </button>
+                </dd>
+              </div>
+              <div>
+                <dt>PNG file</dt>
+                <dd>
+                  <span>{previewExportNames.png}</span>
+                  <button
+                    type="button"
+                    onClick={() => copyExportName('PNG file', previewExportNames.png)}
+                  >
+                    Copy
+                  </button>
+                </dd>
+              </div>
+              <div>
+                <dt>SVG file</dt>
+                <dd>
+                  <span>{previewExportNames.svg}</span>
+                  <button
+                    type="button"
+                    onClick={() => copyExportName('SVG file', previewExportNames.svg)}
+                  >
+                    Copy
+                  </button>
+                </dd>
+              </div>
+            </dl>
+          </section>
         </aside>
       </section>
 
