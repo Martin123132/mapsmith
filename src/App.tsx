@@ -1605,6 +1605,23 @@ function App() {
         return
       }
 
+      if (selectedConnector && (event.key === 'l' || event.key === 'L')) {
+        event.preventDefault()
+        setBoard((current) => ({
+          ...current,
+          connectors: current.connectors.map((connector) => {
+            if (connector.id !== selectedConnector.id) {
+              return connector
+            }
+
+            const nextValue = !(connector.showLabel !== false && Boolean(connector.label))
+            return { ...connector, showLabel: nextValue }
+          }),
+        }))
+        markChanged('Connector label visibility toggled')
+        return
+      }
+
       if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
         return
       }
@@ -2225,6 +2242,13 @@ function App() {
                     <span>1px</span>
                     <kbd>Shift</kbd>
                     <span>10px (selected connector)</span>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Toggle Connector Label</dt>
+                  <dd>
+                    <kbd>L</kbd>
+                    <span>Show/hide selected connector label</span>
                   </dd>
                 </div>
                 <div>
