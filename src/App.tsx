@@ -28,6 +28,12 @@ import './App.css'
 import { isBoard, parseBoardFileText, serializeBoardFile } from './boardFile'
 import type { Board, Connector, DiagramNode, PortName, ShapeKind } from './boardFile'
 import { createSvgExport } from './svgExport'
+import {
+  isConnectorLabelVisible,
+  nudgeConnectorLabelOffset,
+  resetConnectorLabelOffset,
+  toggleConnectorLabelVisibility,
+} from './connectorLabelShortcuts'
 
 const boardName = 'Mapsmith demo board'
 const AUTOSAVE_KEY = 'mapsmith-board-draft-v1'
@@ -883,26 +889,6 @@ const resizeNodeByKeyboard = (
   return { ...node, height: node.height + step }
 }
 
-const nudgeConnectorLabelOffset = (
-  connector: Connector,
-  direction: 'left' | 'right' | 'up' | 'down',
-  step: number,
-): Connector => {
-  if (direction === 'left') {
-    return { ...connector, labelOffsetX: (connector.labelOffsetX ?? 0) - step }
-  }
-
-  if (direction === 'right') {
-    return { ...connector, labelOffsetX: (connector.labelOffsetX ?? 0) + step }
-  }
-
-  if (direction === 'up') {
-    return { ...connector, labelOffsetY: (connector.labelOffsetY ?? 0) - step }
-  }
-
-  return { ...connector, labelOffsetY: (connector.labelOffsetY ?? 0) + step }
-}
-
 const getBounds = (nodes: DiagramNode[]) => {
   if (nodes.length === 0) {
     return { x: -420, y: -280, width: 840, height: 560 }
@@ -1610,12 +1596,10 @@ function App() {
         setBoard((current) => ({
           ...current,
           connectors: current.connectors.map((connector) => {
-            if (connector.id !== selectedConnector.id) {
-              return connector
+            if (connector.id === selectedConnector.id) {
+              return toggleConnectorLabelVisibility(connector)
             }
-
-            const nextValue = !(connector.showLabel !== false && Boolean(connector.label))
-            return { ...connector, showLabel: nextValue }
+            return connector
           }),
         }))
         markChanged('Connector label visibility toggled')
@@ -1627,13 +1611,7 @@ function App() {
         setBoard((current) => ({
           ...current,
           connectors: current.connectors.map((connector) =>
-            connector.id === selectedConnector.id
-              ? {
-                  ...connector,
-                  labelOffsetX: 0,
-                  labelOffsetY: 0,
-                }
-              : connector,
+            connector.id === selectedConnector.id ? resetConnectorLabelOffset(connector) : connector,
           ),
         }))
         markChanged('Connector label offset reset')
@@ -2025,7 +2003,7 @@ function App() {
                     <span>Show label</span>
                     <input
                       type="checkbox"
-                      checked={selectedConnector.showLabel !== false && Boolean(selectedConnector.label)}
+                      checked={isConnectorLabelVisible(selectedConnector)}
                       onChange={(event) => updateSelectedConnectorLabelVisibility(event.target.checked)}
                     />
                   </label>
