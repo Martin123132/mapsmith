@@ -115,6 +115,9 @@ const requiredShortcutText = [
   '<dt>Reset Connector Label</dt>',
   '<kbd>L</kbd>',
   '<kbd>0</kbd>',
+  'Press ? for keyboard shortcuts',
+  'Connector shortcuts: arrows move label',
+  'Node shortcuts: arrows move',
 ]
 
 for (const snippet of requiredShortcutText) {

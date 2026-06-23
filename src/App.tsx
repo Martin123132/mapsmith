@@ -1008,6 +1008,21 @@ function App() {
   )
 
   const elementCount = board.nodes.length + board.connectors.length
+  const shortcutHint = useMemo(() => {
+    if (selectedConnector) {
+      return 'Connector shortcuts: arrows move label, Shift+arrows = 10px, L toggles label, 0 resets offset'
+    }
+
+    if (selectedNode) {
+      return 'Node shortcuts: arrows move, Shift+arrows = 10px, Alt+arrows resize'
+    }
+
+    if (showShortcuts) {
+      return 'Shortcut panel open: press ? again to close'
+    }
+
+    return 'Press ? for keyboard shortcuts'
+  }, [selectedConnector, selectedNode, showShortcuts])
   const nodeMap = useMemo(
     () => new Map(board.nodes.map((node) => [node.id, node])),
     [board.nodes],
@@ -2356,7 +2371,7 @@ function App() {
 
       <footer className="statusbar">
         <span>github.com/Martin123132/mapsmith</span>
-        <span>AGPL app shell, native SVG engine</span>
+        <span>{shortcutHint}</span>
         <span>{status}</span>
       </footer>
 
