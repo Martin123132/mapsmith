@@ -1169,6 +1169,14 @@ function App() {
     return () => window.removeEventListener('beforeunload', onBeforeUnload)
   }, [hasUnsavedChanges])
 
+  const confirmBoardReplace = useCallback((actionName: string) => {
+    if (!hasUnsavedChanges) {
+      return true
+    }
+
+    return window.confirm(`Discard unsaved changes and ${actionName}?`)
+  }, [hasUnsavedChanges])
+
   const copyExportName = useCallback(async (label: string, filename: string) => {
     if (!navigator.clipboard) {
       setStatus(`Clipboard not available for ${label}`)
@@ -1424,6 +1432,10 @@ function App() {
   }, [future, markBoardChange, syncSelectionWithBoard, syncUnsavedState])
 
   const recoverDraft = useCallback(() => {
+    if (!confirmBoardReplace('load the local draft')) {
+      return
+    }
+
     const draft = loadBoardDraft()
     if (!draft) {
       setAutosaveState((current) => ({
@@ -1442,7 +1454,7 @@ function App() {
     syncSelectionWithBoard(nextBoard)
     setSavedBoardCheckpoint(nextBoard)
     setAutosaveState({ hasDraft: true, savedAt: draft.savedAt, error: '' })
-  }, [setSavedBoardCheckpoint, syncSelectionWithBoard, updateBoard])
+  }, [confirmBoardReplace, setSavedBoardCheckpoint, syncSelectionWithBoard, updateBoard])
 
   const applyTemplate = useCallback(
     (nextTemplateId: TemplateId) => {
@@ -1452,13 +1464,17 @@ function App() {
         return
       }
 
+      if (!confirmBoardReplace(`load ${template.name}`)) {
+        return
+      }
+
       const nextBoard = normalizeBoard(template.createBoard())
       updateBoard(() => nextBoard, `${template.name} template loaded`)
       setBoardTitleDraft(nextBoard.name)
       setView(initialView)
       setSavedBoardCheckpoint(nextBoard)
     },
-    [setSavedBoardCheckpoint, updateBoard],
+    [confirmBoardReplace, setSavedBoardCheckpoint, updateBoard],
   )
 
   const applyBoardTitle = useCallback(() => {
@@ -1874,8 +1890,12 @@ function App() {
   }, [board, setSavedBoardCheckpoint])
 
   const openBoard = useCallback(() => {
+    if (!confirmBoardReplace('open a new board')) {
+      return
+    }
+
     fileInputRef.current?.click()
-  }, [])
+  }, [confirmBoardReplace])
 
   const handleFileSelected = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -1899,13 +1919,17 @@ function App() {
   }, [setSavedBoardCheckpoint, syncSelectionWithBoard, updateBoard])
 
   const resetBoard = useCallback(() => {
+    if (!confirmBoardReplace('reset to the demo board')) {
+      return
+    }
+
     const nextBoard = normalizeBoard(createDemoBoard())
     updateBoard(() => nextBoard, 'Demo board reset')
     setBoardTitleDraft(nextBoard.name)
     syncSelectionWithBoard(nextBoard)
     setView(initialView)
     setSavedBoardCheckpoint(nextBoard)
-  }, [setSavedBoardCheckpoint, syncSelectionWithBoard, updateBoard])
+  }, [confirmBoardReplace, setSavedBoardCheckpoint, syncSelectionWithBoard, updateBoard])
 
   const exportPng = useCallback(async () => {
     const seed = exportTimeStem()
