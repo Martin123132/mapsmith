@@ -36,7 +36,7 @@ Mapsmith currently includes:
 
 ## File Compatibility
 
-New saves use the `.mapsmith` extension. The JSON board payload intentionally keeps the legacy `canvasforge-board` type marker so existing `.canvasforge` files continue to import without migration.
+New saves use the `.mapsmith` extension. The JSON board payload intentionally keeps the legacy `canvasforge-board` type marker so existing `.canvasforge` files continue to import without migration. For compatibility, raw legacy Mapsmith board JSON objects can also be imported when no wrapper type/version fields are present.
 
 See [examples/](examples/) for a tiny synthetic `.mapsmith` board and checked [open/export/save walkthrough](examples/WALKTHROUGH.md).
 

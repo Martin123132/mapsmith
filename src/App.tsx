@@ -1913,8 +1913,9 @@ function App() {
       setBoardTitleDraft(parsedBoard.name)
       syncSelectionWithBoard(nextBoard)
       setSavedBoardCheckpoint(nextBoard)
-    } catch {
-      setStatus('Could not load board')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not load board'
+      setStatus(`Could not load board: ${message}`)
     }
   }, [setSavedBoardCheckpoint, syncSelectionWithBoard, updateBoard])
 

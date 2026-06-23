@@ -131,6 +131,30 @@ export const isBoardFile = (value: unknown): value is BoardFile => {
   return value.type === BOARD_FILE_TYPE && value.version === BOARD_VERSION && isBoard(value.board)
 }
 
+const parseBoardFilePayload = (value: unknown): Board => {
+  if (isBoard(value)) {
+    return value
+  }
+
+  if (!isRecord(value)) {
+    throw new Error('Board payload is not an object')
+  }
+
+  if (value.type !== BOARD_FILE_TYPE) {
+    throw new Error(`Unsupported board file type "${String(value.type ?? 'none')}"`)
+  }
+
+  if (value.version !== BOARD_VERSION) {
+    throw new Error(`Unsupported board file version "${String(value.version ?? 'none')}"`)
+  }
+
+  if (!isBoard(value.board)) {
+    throw new Error('Board payload is not a valid Mapsmith board')
+  }
+
+  return value.board
+}
+
 export const serializeBoardFile = (board: Board): string =>
   JSON.stringify(
     {
@@ -143,10 +167,25 @@ export const serializeBoardFile = (board: Board): string =>
   )
 
 export const parseBoardFileText = (text: string): Board => {
-  const parsed: unknown = JSON.parse(text)
-  if (!isBoardFile(parsed)) {
-    throw new Error('Invalid Mapsmith board')
+  let parsed: unknown
+
+  try {
+    parsed = JSON.parse(text)
+  } catch (error) {
+    const message = error instanceof Error ? ` (${error.message})` : ''
+    throw new Error(
+      `Board file is not valid JSON${message}`,
+      { cause: error },
+    )
   }
 
-  return parsed.board
+  try {
+    return parseBoardFilePayload(parsed)
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error
+    }
+
+    throw new Error('Invalid Mapsmith board', { cause: error })
+  }
 }

@@ -91,31 +91,48 @@ for (const blocked of forbidden) {
   }
 }
 
-const invalidCases = [
-  '{}',
-  JSON.stringify({ type: 'canvasforge-board', version: 999, board: fixture }),
-  JSON.stringify({
-    type: 'canvasforge-board',
-    version: 1,
-    board: { ...fixture, nodes: [{ ...fixture.nodes[0], width: 0 }] },
-  }),
-  JSON.stringify({
-    type: 'canvasforge-board',
-    version: 1,
-    board: { ...fixture, connectors: [{ ...fixture.connectors[0], fromPort: 'center' }] },
-  }),
+if (JSON.stringify(parseBoardFileText(JSON.stringify(fixture))) !== JSON.stringify(fixture)) {
+  throw new Error('Legacy board payload should parse into the same board')
+}
+
+const invalidCases: Array<{ input: string; expects: string }> = [
+  { input: '{}', expects: 'Unsupported board file type' },
+  { input: JSON.stringify([]), expects: 'Board payload is not an object' },
+  {
+    input: JSON.stringify({ type: 'canvasforge-board', version: 999, board: fixture }),
+    expects: 'Unsupported board file version',
+  },
+  {
+    input: JSON.stringify({
+      type: 'canvasforge-board',
+      version: 1,
+      board: {
+        ...fixture,
+        nodes: [{ ...fixture.nodes[0], width: 0 }],
+      },
+    }),
+    expects: 'Board payload is not a valid Mapsmith board',
+  },
+  {
+    input: JSON.stringify({
+      type: 'canvasforge-board',
+      version: 1,
+      board: { ...fixture, connectors: [{ ...fixture.connectors[0], fromPort: 'center' }] },
+    }),
+    expects: 'Board payload is not a valid Mapsmith board',
+  },
 ]
 
-for (const invalid of invalidCases) {
-  let rejected = false
+for (const { input, expects } of invalidCases) {
+  let error: string | null = null
   try {
-    parseBoardFileText(invalid)
-  } catch {
-    rejected = true
+    parseBoardFileText(input)
+  } catch (thrown) {
+    error = thrown instanceof Error ? thrown.message : String(thrown)
   }
 
-  if (!rejected) {
-    throw new Error(`Invalid board file was accepted: ${invalid}`)
+  if (!error || !error.includes(expects)) {
+    throw new Error(`Invalid board file was accepted or wrong error: ${input}`)
   }
 }
 
