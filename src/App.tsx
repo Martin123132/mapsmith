@@ -1052,7 +1052,7 @@ function App() {
       return 'Shortcut panel open: press ? again to close'
     }
 
-      return 'Press ? for keyboard shortcuts. Press Tab to cycle selection, Shift+Tab previous'
+    return 'Press ? for keyboard shortcuts. Press Tab to cycle selection, Shift+Tab previous'
   }, [selectedConnector, selectedNode, showShortcuts])
   const nodeMap = useMemo(
     () => new Map(board.nodes.map((node) => [node.id, node])),
