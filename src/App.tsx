@@ -1054,6 +1054,17 @@ function App() {
 
     return 'Press ? for keyboard shortcuts. Press Tab to cycle selection, Shift+Tab previous'
   }, [selectedConnector, selectedNode, showShortcuts])
+  const selectionLabel = useMemo(() => {
+    if (selectedConnector) {
+      return `Connector ${selectedConnector.id}`
+    }
+
+    if (selectedNode) {
+      return `Node ${selectedNode.id}`
+    }
+
+    return ''
+  }, [selectedConnector, selectedNode])
   const nodeMap = useMemo(
     () => new Map(board.nodes.map((node) => [node.id, node])),
     [board.nodes],
@@ -2450,13 +2461,26 @@ function App() {
                 }
 
                 const normalizedConnector = assignPorts(connector, nodeMap)
+                const isSelectedConnector = selectedConnectorId === connector.id
                 const { start, end } = getPersistentConnectorEndpoints(normalizedConnector, from, to)
                 return (
                   <g
                     key={connector.id}
-                    className={`connector ${selectedConnectorId === connector.id ? 'selected' : ''}`}
+                    className={`connector ${isSelectedConnector ? 'selected' : ''}`}
                     onPointerDown={(event) => handleConnectorPointerDown(event, normalizedConnector)}
                   >
+                    {isSelectedConnector ? (
+                      <line
+                        className="connector-selection-ring"
+                        stroke={connector.stroke}
+                        strokeLinecap="round"
+                        strokeWidth="10"
+                        x1={start.x}
+                        x2={end.x}
+                        y1={start.y}
+                        y2={end.y}
+                      />
+                    ) : null}
                     <line
                       className="connector-hit"
                       stroke="transparent"
@@ -2488,7 +2512,7 @@ function App() {
                         {connector.label}
                       </text>
                     ) : null}
-                    {selectedConnectorId === connector.id ? (
+                    {isSelectedConnector ? (
                       <>
                         <circle className="connector-port" cx={start.x} cy={start.y} r="5.5" />
                         <circle className="connector-port" cx={end.x} cy={end.y} r="5.5" />
@@ -2520,7 +2544,7 @@ function App() {
               ? connectorStartId
                 ? 'Connector target'
                 : 'Connector source'
-              : `${tool[0].toUpperCase()}${tool.slice(1)} mode`}
+              : `${tool[0].toUpperCase()}${tool.slice(1)} mode${selectionLabel ? ` • ${selectionLabel}` : ''}`}
           </div>
           {showShortcuts ? (
             <aside className="shortcut-card" aria-label="Keyboard shortcuts">

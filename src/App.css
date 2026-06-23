@@ -448,6 +448,11 @@
     drop-shadow(0 0 6px rgba(255, 107, 53, 0.32));
 }
 
+.connector-selection-ring {
+  opacity: 0.26;
+  pointer-events: none;
+}
+
 .connector-hit {
   pointer-events: stroke;
 }
