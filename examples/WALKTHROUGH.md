@@ -34,3 +34,18 @@ npm run verify:examples
 ```
 
 The verifier parses the sample board, checks canonical JSON formatting, re-renders it through the SVG exporter, verifies the expected demo labels, and rejects obvious path or secret-like content.
+
+## 5. Run the Import Smoke Proof
+
+Run:
+
+```bash
+npm run verify:import-smoke
+```
+
+This verifies the same sample imports through both supported input shapes:
+
+- Wrapped file format (`canvasforge-board` + `version`)
+- Legacy raw board object (`{ name, nodes, connectors }`)
+
+It also validates parser failure paths for invalid JSON, unknown wrappers, wrong versions, and bad connector ports.

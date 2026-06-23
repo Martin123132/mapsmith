@@ -51,6 +51,7 @@ requireIncludes('README.md', files.readme, [
   'npm run verify:examples',
   'AGPL-3.0-only',
   'local-first',
+  'npm run verify:import-smoke',
 ])
 
 requireIncludes('CONTRIBUTING.md', files.contributing, [

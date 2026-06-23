@@ -26,3 +26,9 @@ npm run verify:examples
 ```
 
 The verifier parses the example, checks deterministic round-tripping, renders an SVG string from it, and rejects obvious path or secret-like content.
+
+For parser coverage, also run:
+
+```bash
+npm run verify:import-smoke
+```

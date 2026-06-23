@@ -76,6 +76,7 @@ npm run build
 npm run audit
 npm run verify:board
 npm run verify:examples
+npm run verify:import-smoke
 npm run verify:svg
 ```
 
