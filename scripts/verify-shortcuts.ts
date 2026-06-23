@@ -1,3 +1,4 @@
+import { readFile } from 'node:fs/promises'
 import { createSvgExport, type ExportBoard } from '../src/svgExport.js'
 import type { Board } from '../src/boardFile.js'
 import {
@@ -103,6 +104,22 @@ const forbidden = ['connector-label-offset', 'D:\\', 'C:\\', 'gho_', 'token', 's
 for (const blocked of forbidden) {
   if (shownSvg.toLowerCase().includes(blocked.toLowerCase())) {
     throw new Error(`Shortcut SVG proof contains forbidden content: ${blocked}`)
+  }
+}
+
+const appText = await readFile('src/App.tsx', 'utf8')
+const requiredShortcutText = [
+  '<dt>Nudge Node</dt>',
+  '<dt>Nudge Connector Label</dt>',
+  '<dt>Toggle Connector Label</dt>',
+  '<dt>Reset Connector Label</dt>',
+  '<kbd>L</kbd>',
+  '<kbd>0</kbd>',
+]
+
+for (const snippet of requiredShortcutText) {
+  if (!appText.includes(snippet)) {
+    throw new Error(`App.tsx missing shortcut help text snippet: ${snippet}`)
   }
 }
 
