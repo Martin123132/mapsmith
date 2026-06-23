@@ -1029,7 +1029,7 @@ function App() {
   const elementCount = board.nodes.length + board.connectors.length
   const shortcutHint = useMemo(() => {
     if (selectedConnector) {
-      return 'Connector shortcuts: arrows move label, Shift+arrows = 10px, L toggles label, 0 resets offset'
+      return 'Connector shortcuts: arrows move label, Shift+arrows=10px, N/E/S/W set source port, Shift+N/E/S/W set target port, L toggles label, 0 resets offset'
     }
 
     if (selectedNode) {
@@ -2542,8 +2542,11 @@ function App() {
                     <kbd>Shift</kbd>
                     <span>+</span>
                     <kbd>N</kbd>
+                    <span>/</span>
                     <kbd>E</kbd>
+                    <span>/</span>
                     <kbd>S</kbd>
+                    <span>/</span>
                     <kbd>W</kbd>
                   </dd>
                 </div>
