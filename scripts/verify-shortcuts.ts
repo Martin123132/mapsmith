@@ -113,7 +113,10 @@ const requiredShortcutText = [
   '<dt>Nudge Connector Label</dt>',
   '<dt>Toggle Connector Label</dt>',
   '<dt>Reset Connector Label</dt>',
+  '<dt>History</dt>',
   '<h3>File shortcuts</h3>',
+  '<dt>Undo</dt>',
+  '<dt>Redo</dt>',
   '<dt>Save</dt>',
   '<dt>Open</dt>',
   '<dt>PNG</dt>',
@@ -125,6 +128,8 @@ const requiredShortcutText = [
   'Press ? for keyboard shortcuts',
   'Connector shortcuts: arrows move label',
   'Node shortcuts: arrows move',
+  'Undo (Ctrl/Cmd + Z)',
+  'Redo (Ctrl/Cmd + Shift + Z / Ctrl/Cmd + Y)',
 ]
 
 for (const snippet of requiredShortcutText) {

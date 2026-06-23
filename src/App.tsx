@@ -10,8 +10,10 @@ import {
   MousePointer2,
   Move,
   PanelRightClose,
+  Redo2,
   RefreshCcw,
   Save,
+  Undo2,
   ShieldCheck,
   Sparkles,
   Square,
@@ -838,6 +840,17 @@ const normalizeBoard = (board: Board): Board => {
   }
 }
 
+const HISTORY_LIMIT = 60
+
+const boardSnapshot = (board: Board): Board => ({
+  ...board,
+  nodes: board.nodes.map((node) => ({ ...node })),
+  connectors: board.connectors.map((connector) => ({ ...connector })),
+})
+
+const areBoardsEqual = (left: Board, right: Board) =>
+  JSON.stringify(left) === JSON.stringify(right)
+
 const resizeNode = (node: DiagramNode, handle: ResizeHandle, delta: Point): DiagramNode => {
   const minWidth = node.kind === 'text' ? 120 : 96
   const minHeight = node.kind === 'text' ? 36 : 56
@@ -974,10 +987,13 @@ function App() {
   const canvasRef = useRef<SVGSVGElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const hasDraggedRef = useRef(false)
+  const boardRef = useRef<Board>(createDemoBoard())
   const initialDraft = useMemo(() => loadBoardDraft(), [])
-  const [board, setBoard] = useState<Board>(
+  const initialBoard = useMemo(
     () => normalizeBoard(initialDraft?.board ?? createDemoBoard()),
+    [initialDraft],
   )
+  const [board, setBoard] = useState<Board>(() => initialBoard)
   const [view, setView] = useState<View>(initialView)
   const [tool, setTool] = useState<Tool>('select')
   const [selectedId, setSelectedId] = useState<string>(initialDraft?.board.nodes[0]?.id ?? 'local-first')
@@ -990,6 +1006,9 @@ function App() {
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [boardTitleDraft, setBoardTitleDraft] = useState(initialDraft?.board.name ?? boardName)
   const [templateId, setTemplateId] = useState<TemplateId>('flowchart')
+  const [history, setHistory] = useState<Board[]>(() => [boardSnapshot(initialBoard)])
+  const [future, setFuture] = useState<Board[]>([])
+  const dragStartBoardRef = useRef<Board | null>(null)
   const [autosaveState, setAutosaveState] = useState<AutosaveState>(() => ({
     hasDraft: Boolean(initialDraft),
     savedAt: initialDraft?.savedAt ?? null,
@@ -1077,6 +1096,10 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    boardRef.current = board
+  }, [board])
+
   const copyExportName = useCallback(async (label: string, filename: string) => {
     if (!navigator.clipboard) {
       setStatus(`Clipboard not available for ${label}`)
@@ -1139,30 +1162,6 @@ function App() {
     }
   }, [])
 
-  const recoverDraft = useCallback(() => {
-    const draft = loadBoardDraft()
-    if (!draft) {
-      setAutosaveState((current) => ({
-        ...current,
-        hasDraft: false,
-        savedAt: null,
-      }))
-      setStatus('No local draft to recover')
-      return
-    }
-
-    const nextBoard = normalizeBoard(draft.board)
-    setBoard(nextBoard)
-    setBoardTitleDraft(nextBoard.name)
-    setSelectedId(nextBoard.nodes[0]?.id ?? '')
-    setSelectedConnectorId('')
-    setConnectorStartId(null)
-    setStatus('Draft recovered')
-    setLastChanged(nowLabel())
-    setAutosaveState({ hasDraft: true, savedAt: draft.savedAt, error: '' })
-    setView(initialView)
-  }, [])
-
   useEffect(() => {
     if (!autosaveInitializedRef.current) {
       autosaveInitializedRef.current = true
@@ -1185,6 +1184,149 @@ function App() {
     }
   }, [board, persistDraft])
 
+  const markBoardChange = useCallback(
+    (nextStatus = 'Edited in memory') => {
+      setLastChanged(nowLabel())
+      setStatus(nextStatus)
+    },
+    [],
+  )
+
+  const syncSelectionWithBoard = useCallback((nextBoard: Board) => {
+    setSelectedId((currentSelectedId) =>
+      nextBoard.nodes.some((node) => node.id === currentSelectedId)
+        ? currentSelectedId
+        : nextBoard.nodes[0]?.id ?? '',
+    )
+
+    setSelectedConnectorId((currentConnectorId) =>
+      nextBoard.connectors.some((connector) => connector.id === currentConnectorId)
+        ? currentConnectorId
+        : '',
+    )
+    setConnectorStartId(null)
+  }, [])
+
+  const pushBoardHistory = useCallback(
+    (currentBoard: Board, nextBoard: Board) => {
+      const normalizedCurrent = boardSnapshot(normalizeBoard(currentBoard))
+      const normalizedNext = boardSnapshot(normalizeBoard(nextBoard))
+      if (areBoardsEqual(normalizedCurrent, normalizedNext)) {
+        return
+      }
+
+      setHistory((currentHistory) => {
+        const historyCurrent = (() => {
+          if (
+            currentHistory.length &&
+            areBoardsEqual(currentHistory[currentHistory.length - 1], normalizedCurrent)
+          ) {
+            return currentHistory
+          }
+
+          return [...currentHistory, normalizedCurrent].slice(-HISTORY_LIMIT)
+        })()
+
+        if (
+          historyCurrent.length &&
+          areBoardsEqual(historyCurrent[historyCurrent.length - 1], normalizedNext)
+        ) {
+          return historyCurrent
+        }
+
+        return [...historyCurrent, normalizedNext].slice(-HISTORY_LIMIT)
+      })
+
+      setFuture([])
+    },
+    [],
+  )
+
+  const updateBoard = useCallback(
+    (mutator: (current: Board) => Board, status = 'Edited in memory') => {
+      setBoard((current) => {
+        const nextBoard = boardSnapshot(normalizeBoard(mutator(current)))
+        if (areBoardsEqual(current, nextBoard)) {
+          return current
+        }
+
+        pushBoardHistory(current, nextBoard)
+        return nextBoard
+      })
+      markBoardChange(status)
+    },
+    [markBoardChange, pushBoardHistory],
+  )
+
+  const recordBoardSnapshot = useCallback(
+    (status = 'Edited in memory', previousBoard: Board | null = null) => {
+      if (!previousBoard) {
+        markBoardChange(status)
+        return
+      }
+
+      setBoard((current) => {
+        const normalizedCurrent = boardSnapshot(normalizeBoard(current))
+        pushBoardHistory(previousBoard, normalizedCurrent)
+        return current
+      })
+      markBoardChange(status)
+    },
+    [markBoardChange, pushBoardHistory],
+  )
+
+  const canUndo = history.length > 1
+  const canRedo = future.length > 0
+
+  const undo = useCallback(() => {
+    if (history.length <= 1) {
+      setStatus('Nothing to undo')
+      return
+    }
+
+    const previousState = history[history.length - 2]
+
+    setHistory((currentHistory) => currentHistory.slice(0, -1))
+    setFuture((currentFuture) => [boardSnapshot(normalizeBoard(boardRef.current)), ...currentFuture].slice(0, HISTORY_LIMIT))
+    setBoard(previousState)
+    syncSelectionWithBoard(previousState)
+    markBoardChange('Undo')
+  }, [history, markBoardChange, syncSelectionWithBoard])
+
+  const redo = useCallback(() => {
+    if (future.length < 1) {
+      setStatus('Nothing to redo')
+      return
+    }
+
+    const nextState = future[0]
+    setHistory((currentHistory) => [...currentHistory, nextState].slice(-HISTORY_LIMIT))
+    setFuture((currentFuture) => currentFuture.slice(1))
+    setBoard(nextState)
+    syncSelectionWithBoard(nextState)
+    markBoardChange('Redo')
+  }, [future, markBoardChange, syncSelectionWithBoard])
+
+  const recoverDraft = useCallback(() => {
+    const draft = loadBoardDraft()
+    if (!draft) {
+      setAutosaveState((current) => ({
+        ...current,
+        hasDraft: false,
+        savedAt: null,
+      }))
+      setStatus('No local draft to recover')
+      return
+    }
+
+    const nextBoard = normalizeBoard(draft.board)
+    updateBoard(() => nextBoard, 'Draft recovered')
+    setBoardTitleDraft(nextBoard.name)
+    setView(initialView)
+    syncSelectionWithBoard(nextBoard)
+    setAutosaveState({ hasDraft: true, savedAt: draft.savedAt, error: '' })
+  }, [syncSelectionWithBoard, updateBoard])
+
   const applyTemplate = useCallback(
     (nextTemplateId: TemplateId) => {
       const template = boardTemplates.find((entry) => entry.id === nextTemplateId)
@@ -1194,22 +1336,12 @@ function App() {
       }
 
       const nextBoard = normalizeBoard(template.createBoard())
-      setBoard(nextBoard)
+      updateBoard(() => nextBoard, `${template.name} template loaded`)
       setBoardTitleDraft(nextBoard.name)
-      setSelectedId(nextBoard.nodes[0]?.id ?? '')
-      setSelectedConnectorId('')
-      setConnectorStartId(null)
       setView(initialView)
-      setStatus(`${template.name} template loaded`)
-      setLastChanged(nowLabel())
     },
-    [],
+    [updateBoard],
   )
-
-  const markChanged = useCallback((nextStatus = 'Edited in memory') => {
-    setLastChanged(nowLabel())
-    setStatus(nextStatus)
-  }, [])
 
   const applyBoardTitle = useCallback(() => {
     const nextName = boardTitleDraft.trim() || 'Mapsmith board'
@@ -1217,42 +1349,45 @@ function App() {
       return
     }
 
-    setBoard((current) => ({ ...current, name: nextName }))
+    updateBoard((current) => ({ ...current, name: nextName }), 'Board title updated')
     setBoardTitleDraft(nextName)
-    markChanged('Board title updated')
-  }, [board.name, boardTitleDraft, markChanged])
+  }, [board.name, boardTitleDraft, updateBoard])
 
   const removeConnector = useCallback(
     (connectorId: string) => {
-      setBoard((current) => ({
-        ...current,
-        connectors: current.connectors.filter((connector) => connector.id !== connectorId),
-      }))
+      updateBoard(
+        (current) => ({
+          ...current,
+          connectors: current.connectors.filter((connector) => connector.id !== connectorId),
+        }),
+        'Connector deleted',
+      )
       if (selectedConnectorId === connectorId) {
         setSelectedConnectorId('')
       }
-      markChanged('Connector deleted')
     },
-    [markChanged, selectedConnectorId],
+    [selectedConnectorId, updateBoard],
   )
 
   const removeNode = useCallback(
     (nodeId: string) => {
-      setBoard((current) => ({
-        ...current,
-        nodes: current.nodes.filter((node) => node.id !== nodeId),
-        connectors: current.connectors.filter(
-          (connector) => connector.from !== nodeId && connector.to !== nodeId,
-        ),
-      }))
+      updateBoard(
+        (current) => ({
+          ...current,
+          nodes: current.nodes.filter((node) => node.id !== nodeId),
+          connectors: current.connectors.filter(
+            (connector) => connector.from !== nodeId && connector.to !== nodeId,
+          ),
+        }),
+        'Node deleted',
+      )
       if (selectedId === nodeId) {
         setSelectedId('')
       }
       setSelectedConnectorId('')
       setConnectorStartId(null)
-      markChanged('Node deleted')
     },
-    [markChanged, selectedId],
+    [selectedId, updateBoard],
   )
 
   const screenToWorld = useCallback(
@@ -1277,15 +1412,17 @@ function App() {
         return
       }
 
-      setBoard((current) => ({
-        ...current,
-        nodes: current.nodes.map((node) =>
-          node.id === selectedNode.id ? { ...node, ...patch } : node,
-        ),
-      }))
-      markChanged()
+      updateBoard(
+        (current) => ({
+          ...current,
+          nodes: current.nodes.map((node) =>
+            node.id === selectedNode.id ? { ...node, ...patch } : node,
+          ),
+        }),
+        'Edited in memory',
+      )
     },
-    [markChanged, selectedNode],
+    [selectedNode, updateBoard],
   )
 
   const updateSelectedConnectorPort = useCallback(
@@ -1294,15 +1431,17 @@ function App() {
         return
       }
 
-      setBoard((current) => ({
-        ...current,
-        connectors: current.connectors.map((connector) =>
-          connector.id === selectedConnector.id ? { ...connector, [side]: port } : connector,
-        ),
-      }))
-      markChanged(side === 'fromPort' ? 'Source port changed' : 'Target port changed')
+      updateBoard(
+        (current) => ({
+          ...current,
+          connectors: current.connectors.map((connector) =>
+            connector.id === selectedConnector.id ? { ...connector, [side]: port } : connector,
+          ),
+        }),
+        side === 'fromPort' ? 'Source port changed' : 'Target port changed',
+      )
     },
-    [markChanged, selectedConnector],
+    [selectedConnector, updateBoard],
   )
 
   const updateSelectedConnectorLabel = useCallback(
@@ -1312,21 +1451,23 @@ function App() {
       }
 
       const nextLabel = rawLabel.trim() === '' ? undefined : rawLabel
-      setBoard((current) => ({
-        ...current,
-        connectors: current.connectors.map((connector) =>
-          connector.id === selectedConnector.id
-            ? {
-                ...connector,
-                label: nextLabel,
-                showLabel: nextLabel === undefined ? false : true,
-              }
-            : connector,
-        ),
-      }))
-      markChanged('Connector label changed')
+      updateBoard(
+        (current) => ({
+          ...current,
+          connectors: current.connectors.map((connector) =>
+            connector.id === selectedConnector.id
+              ? {
+                  ...connector,
+                  label: nextLabel,
+                  showLabel: nextLabel === undefined ? false : true,
+                }
+              : connector,
+          ),
+        }),
+        'Connector label changed',
+      )
     },
-    [markChanged, selectedConnector],
+    [selectedConnector, updateBoard],
   )
 
   const updateSelectedConnectorLabelOffset = useCallback(
@@ -1340,20 +1481,22 @@ function App() {
         return
       }
 
-      setBoard((current) => ({
-        ...current,
-        connectors: current.connectors.map((connector) =>
-          connector.id === selectedConnector.id
-            ? {
-                ...connector,
-                [axis === 'x' ? 'labelOffsetX' : 'labelOffsetY']: nextValue,
-              }
-            : connector,
-        ),
-      }))
-      markChanged('Connector label position changed')
+      updateBoard(
+        (current) => ({
+          ...current,
+          connectors: current.connectors.map((connector) =>
+            connector.id === selectedConnector.id
+              ? {
+                  ...connector,
+                  [axis === 'x' ? 'labelOffsetX' : 'labelOffsetY']: nextValue,
+                }
+              : connector,
+          ),
+        }),
+        'Connector label position changed',
+      )
     },
-    [markChanged, selectedConnector],
+    [selectedConnector, updateBoard],
   )
 
   const updateSelectedConnectorLabelVisibility = useCallback(
@@ -1362,15 +1505,19 @@ function App() {
         return
       }
 
-      setBoard((current) => ({
-        ...current,
-        connectors: current.connectors.map((connector) =>
-          connector.id === selectedConnector.id ? { ...connector, showLabel: nextValue } : connector,
-        ),
-      }))
-      markChanged('Connector label visibility changed')
+      updateBoard(
+        (current) => ({
+          ...current,
+          connectors: current.connectors.map((connector) =>
+            connector.id === selectedConnector.id
+              ? { ...connector, showLabel: nextValue }
+              : connector,
+          ),
+        }),
+        'Connector label visibility changed',
+      )
     },
-    [markChanged, selectedConnector],
+    [selectedConnector, updateBoard],
   )
 
   const handleCanvasPointerDown = useCallback(
@@ -1395,14 +1542,16 @@ function App() {
 
       if (tool === 'rectangle' || tool === 'diamond' || tool === 'ellipse' || tool === 'text') {
         const node = createNode(tool, point)
-        setBoard((current) => ({
-          ...current,
-          nodes: [...current.nodes, node],
-        }))
+        updateBoard(
+          (current) => ({
+            ...current,
+            nodes: [...current.nodes, node],
+          }),
+          `${tool[0].toUpperCase()}${tool.slice(1)} added`,
+        )
         setSelectedId(node.id)
         setSelectedConnectorId('')
         setTool('select')
-        markChanged(`${tool[0].toUpperCase()}${tool.slice(1)} added`)
         return
       }
 
@@ -1410,7 +1559,7 @@ function App() {
       setSelectedConnectorId('')
       setConnectorStartId(null)
     },
-    [markChanged, screenToWorld, tool, view],
+    [screenToWorld, tool, updateBoard, view],
   )
 
   const handleNodePointerDown = useCallback(
@@ -1434,16 +1583,20 @@ function App() {
             to: node.id,
             stroke: '#26547c',
           }
-          setBoard((current) => ({
-            ...current,
-            connectors: [...current.connectors, assignPorts(connector, nodeMap)],
-          }))
+          updateBoard(
+            (current) => ({
+              ...current,
+              connectors: [...current.connectors, assignPorts(connector, nodeMap)],
+            }),
+            'Connector added',
+          )
           setSelectedId(node.id)
           setSelectedConnectorId('')
           setConnectorStartId(null)
           setTool('select')
-          markChanged('Connector added')
+          return
         }
+
         return
       }
 
@@ -1452,6 +1605,7 @@ function App() {
       setConnectorStartId(null)
       canvasRef.current?.focus()
       hasDraggedRef.current = false
+      dragStartBoardRef.current = boardSnapshot(boardRef.current)
       setDragState({
         mode: 'node',
         id: node.id,
@@ -1460,7 +1614,7 @@ function App() {
       })
       setStatus('Selected node')
     },
-    [connectorStartId, markChanged, nodeMap, screenToWorld, tool],
+    [connectorStartId, nodeMap, screenToWorld, tool, updateBoard],
   )
 
   const handleResizePointerDown = useCallback(
@@ -1471,6 +1625,7 @@ function App() {
       setConnectorStartId(null)
       canvasRef.current?.focus()
       hasDraggedRef.current = false
+      dragStartBoardRef.current = boardSnapshot(boardRef.current)
       setDragState({
         mode: 'resize',
         id: node.id,
@@ -1556,14 +1711,15 @@ function App() {
 
   const handlePointerUp = useCallback(() => {
     if (dragState?.mode === 'resize' && hasDraggedRef.current) {
-      setStatus('Resized node')
+      recordBoardSnapshot('Resized node', dragStartBoardRef.current)
     } else if (dragState?.mode === 'node' && hasDraggedRef.current) {
-      setStatus('Moved node')
+      recordBoardSnapshot('Moved node', dragStartBoardRef.current)
     } else if (dragState?.mode === 'pan' && hasDraggedRef.current) {
       setStatus('Board panned')
     }
+    dragStartBoardRef.current = null
     setDragState(null)
-  }, [dragState?.mode])
+  }, [dragState, recordBoardSnapshot])
 
   const saveBoard = useCallback(() => {
     const seed = exportTimeStem()
@@ -1590,29 +1746,22 @@ function App() {
       const text = await file.text()
       const parsedBoard = parseBoardFileText(text)
 
-      setBoard(normalizeBoard(parsedBoard))
+      const nextBoard = normalizeBoard(parsedBoard)
+      updateBoard(() => nextBoard, 'Board loaded')
       setBoardTitleDraft(parsedBoard.name)
-      setSelectedId(parsedBoard.nodes[0]?.id ?? '')
-      setSelectedConnectorId('')
-      setConnectorStartId(null)
-      setStatus('Board loaded')
-      setLastChanged(nowLabel())
+      syncSelectionWithBoard(nextBoard)
     } catch {
       setStatus('Could not load board')
     }
-  }, [])
+  }, [syncSelectionWithBoard, updateBoard])
 
   const resetBoard = useCallback(() => {
     const nextBoard = normalizeBoard(createDemoBoard())
-    setBoard(nextBoard)
+    updateBoard(() => nextBoard, 'Demo board reset')
     setBoardTitleDraft(nextBoard.name)
-    setSelectedId('local-first')
-    setSelectedConnectorId('')
-    setConnectorStartId(null)
+    syncSelectionWithBoard(nextBoard)
     setView(initialView)
-    setStatus('Demo board reset')
-    setLastChanged(nowLabel())
-  }, [])
+  }, [syncSelectionWithBoard, updateBoard])
 
   const exportPng = useCallback(async () => {
     const seed = exportTimeStem()
@@ -1714,6 +1863,18 @@ function App() {
         return
       }
 
+      if (isFileShortcut && fileKey === 'z' && !event.shiftKey) {
+        event.preventDefault()
+        undo()
+        return
+      }
+
+      if (isFileShortcut && ((event.shiftKey && fileKey === 'z') || fileKey === 'y')) {
+        event.preventDefault()
+        redo()
+        return
+      }
+
       if (event.key === '?' || (event.shiftKey && event.key === '/')) {
         event.preventDefault()
         setShowShortcuts((current) => !current)
@@ -1751,28 +1912,28 @@ function App() {
 
       if (selectedConnector && (event.key === 'l' || event.key === 'L')) {
         event.preventDefault()
-        setBoard((current) => ({
+        updateBoard((current) => ({
           ...current,
-          connectors: current.connectors.map((connector) => {
-            if (connector.id === selectedConnector.id) {
-              return toggleConnectorLabelVisibility(connector)
-            }
-            return connector
-          }),
-        }))
-        markChanged('Connector label visibility toggled')
+          connectors: current.connectors.map((connector) =>
+            connector.id === selectedConnector.id
+              ? toggleConnectorLabelVisibility(connector)
+              : connector,
+          ),
+        }), 'Connector label visibility toggled')
         return
       }
 
       if (selectedConnector && event.key === '0') {
         event.preventDefault()
-        setBoard((current) => ({
-          ...current,
-          connectors: current.connectors.map((connector) =>
-            connector.id === selectedConnector.id ? resetConnectorLabelOffset(connector) : connector,
-          ),
-        }))
-        markChanged('Connector label offset reset')
+        updateBoard(
+          (current) => ({
+            ...current,
+            connectors: current.connectors.map((connector) =>
+              connector.id === selectedConnector.id ? resetConnectorLabelOffset(connector) : connector,
+            ),
+          }),
+          'Connector label offset reset',
+        )
         return
       }
 
@@ -1789,13 +1950,17 @@ function App() {
           | 'up'
           | 'down'
 
-        setBoard((current) => ({
-          ...current,
-          connectors: current.connectors.map((connector) =>
-            connector.id === selectedConnector.id ? nudgeConnectorLabelOffset(connector, direction, step) : connector,
-          ),
-        }))
-        markChanged('Connector label nudged')
+        updateBoard(
+          (current) => ({
+            ...current,
+            connectors: current.connectors.map((connector) =>
+              connector.id === selectedConnector.id
+                ? nudgeConnectorLabelOffset(connector, direction, step)
+                : connector,
+            ),
+          }),
+          'Connector label nudged',
+        )
         return
       }
 
@@ -1811,36 +1976,40 @@ function App() {
         | 'up'
         | 'down'
 
-      setBoard((current) => ({
-        ...current,
-        nodes: current.nodes.map((node) => {
-          if (node.id !== selectedNode.id) {
-            return node
-          }
+      updateBoard(
+        (current) => ({
+          ...current,
+          nodes: current.nodes.map((node) => {
+            if (node.id !== selectedNode.id) {
+              return node
+            }
 
-          if (event.altKey) {
-            return resizeNodeByKeyboard(node, direction, step)
-          }
+            if (event.altKey) {
+              return resizeNodeByKeyboard(node, direction, step)
+            }
 
-          return {
-            ...node,
-            x: node.x + (direction === 'right' ? step : direction === 'left' ? -step : 0),
-            y: node.y + (direction === 'down' ? step : direction === 'up' ? -step : 0),
-          }
+            return {
+              ...node,
+              x: node.x + (direction === 'right' ? step : direction === 'left' ? -step : 0),
+              y: node.y + (direction === 'down' ? step : direction === 'up' ? -step : 0),
+            }
+          }),
         }),
-      }))
-      markChanged(event.altKey ? 'Keyboard resized' : 'Keyboard nudged')
+        event.altKey ? 'Keyboard resized' : 'Keyboard nudged',
+      )
     },
     [
       exportPng,
       exportSvg,
-      markChanged,
       openBoard,
+      redo,
       removeConnector,
       removeNode,
       saveBoard,
       selectedConnector,
       selectedNode,
+      undo,
+      updateBoard,
       showShortcuts,
     ],
   )
@@ -1917,6 +2086,24 @@ function App() {
           >
             <FileInput size={17} />
             <span>SVG</span>
+          </button>
+          <button
+            type="button"
+            onClick={undo}
+            disabled={!canUndo}
+            title="Undo (Ctrl/Cmd + Z)"
+          >
+            <Undo2 size={17} />
+            <span>Undo</span>
+          </button>
+          <button
+            type="button"
+            onClick={redo}
+            disabled={!canRedo}
+            title="Redo (Ctrl/Cmd + Shift + Z / Ctrl/Cmd + Y)"
+          >
+            <Redo2 size={17} />
+            <span>Redo</span>
           </button>
           <button type="button" onClick={resetBoard} title="Reset demo board">
             <RefreshCcw size={17} />
@@ -2336,6 +2523,25 @@ function App() {
                   </dd>
                 </div>
                 <div>
+                  <dt>History</dt>
+                  <dd>
+                    <kbd>Ctrl/Cmd</kbd>
+                    <span>+</span>
+                    <kbd>Z</kbd>
+                    <span>undo</span>
+                    <kbd>Ctrl/Cmd</kbd>
+                    <span>+</span>
+                    <kbd>Shift</kbd>
+                    <span>+</span>
+                    <kbd>Z</kbd>
+                    <span>redo</span>
+                    <kbd>or</kbd>
+                    <kbd>Ctrl/Cmd</kbd>
+                    <span>+</span>
+                    <kbd>Y</kbd>
+                  </dd>
+                </div>
+                <div>
                   <dt>Files</dt>
                   <dd>
                     <span>Save</span>
@@ -2387,6 +2593,28 @@ function App() {
           <section className="file-shortcuts" aria-label="File shortcuts">
             <h3>File shortcuts</h3>
             <dl className="metadata-list file-shortcuts-list">
+              <div>
+                <dt>Undo</dt>
+                <dd>
+                  <kbd>Ctrl/Cmd</kbd>
+                  <span>+</span>
+                  <kbd>Z</kbd>
+                </dd>
+              </div>
+              <div>
+                <dt>Redo</dt>
+                <dd>
+                  <kbd>Ctrl/Cmd</kbd>
+                  <span>+</span>
+                  <kbd>Shift</kbd>
+                  <span>+</span>
+                  <kbd>Z</kbd>
+                  <span>or</span>
+                  <kbd>Ctrl/Cmd</kbd>
+                  <span>+</span>
+                  <kbd>Y</kbd>
+                </dd>
+              </div>
               <div>
                 <dt>Save</dt>
                 <dd>
