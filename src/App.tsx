@@ -1565,9 +1565,152 @@ function App() {
     setDragState(null)
   }, [dragState?.mode])
 
+  const saveBoard = useCallback(() => {
+    const seed = exportTimeStem()
+    const nextNames = buildExportNames(board.name, seed)
+    downloadBlob(
+      new Blob([serializeBoardFile(normalizeBoard(board))], { type: 'application/json' }),
+      nextNames.mapsmith,
+    )
+    setStatus('Board file prepared')
+  }, [board])
+
+  const openBoard = useCallback(() => {
+    fileInputRef.current?.click()
+  }, [])
+
+  const handleFileSelected = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) {
+      return
+    }
+
+    try {
+      const text = await file.text()
+      const parsedBoard = parseBoardFileText(text)
+
+      setBoard(normalizeBoard(parsedBoard))
+      setBoardTitleDraft(parsedBoard.name)
+      setSelectedId(parsedBoard.nodes[0]?.id ?? '')
+      setSelectedConnectorId('')
+      setConnectorStartId(null)
+      setStatus('Board loaded')
+      setLastChanged(nowLabel())
+    } catch {
+      setStatus('Could not load board')
+    }
+  }, [])
+
+  const resetBoard = useCallback(() => {
+    const nextBoard = normalizeBoard(createDemoBoard())
+    setBoard(nextBoard)
+    setBoardTitleDraft(nextBoard.name)
+    setSelectedId('local-first')
+    setSelectedConnectorId('')
+    setConnectorStartId(null)
+    setView(initialView)
+    setStatus('Demo board reset')
+    setLastChanged(nowLabel())
+  }, [])
+
+  const exportPng = useCallback(async () => {
+    const seed = exportTimeStem()
+    const nextNames = buildExportNames(board.name, seed)
+
+    if (!canvasRef.current) {
+      setStatus('Canvas not ready')
+      return
+    }
+
+    const bounds = getBounds(board.nodes)
+    const source = createSvgExport(board)
+    const image = new Image()
+    const url = URL.createObjectURL(
+      new Blob([source], { type: 'image/svg+xml;charset=utf-8' }),
+    )
+
+    await new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve()
+      image.onerror = () => reject(new Error('Could not render SVG'))
+      image.src = url
+    })
+
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.round(bounds.width)
+    canvas.height = Math.round(bounds.height)
+    const context = canvas.getContext('2d')
+    if (!context) {
+      URL.revokeObjectURL(url)
+      setStatus('PNG export failed')
+      return
+    }
+
+    context.fillStyle = '#f8fafc'
+    context.fillRect(0, 0, canvas.width, canvas.height)
+    context.drawImage(image, 0, 0)
+    URL.revokeObjectURL(url)
+
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
+    if (!blob) {
+      setStatus('PNG export failed')
+      return
+    }
+
+    downloadBlob(blob, nextNames.png)
+    setStatus('PNG export prepared')
+  }, [board])
+
+  const exportSvg = useCallback(() => {
+    const seed = exportTimeStem()
+    const nextNames = buildExportNames(board.name, seed)
+
+    if (!canvasRef.current) {
+      setStatus('Canvas not ready')
+      return
+    }
+
+    downloadBlob(
+      new Blob([createSvgExport(board)], { type: 'image/svg+xml;charset=utf-8' }),
+      nextNames.svg,
+    )
+    setStatus('SVG export prepared')
+  }, [board])
+
   const handleCanvasKeyDown = useCallback(
     (event: ReactKeyboardEvent<SVGSVGElement>) => {
       if (event.target instanceof HTMLInputElement) {
+        return
+      }
+
+      const isFileShortcut = event.metaKey || event.ctrlKey
+      const fileKey = event.key.toLowerCase()
+
+      if (isFileShortcut && fileKey === 's') {
+        event.preventDefault()
+        saveBoard()
+        setStatus('Board save shortcut used')
+        return
+      }
+
+      if (isFileShortcut && fileKey === 'o') {
+        event.preventDefault()
+        openBoard()
+        setStatus('Board open shortcut used')
+        return
+      }
+
+      if (isFileShortcut && event.shiftKey && fileKey === 'p') {
+        event.preventDefault()
+        void exportPng()
+        setStatus('PNG export shortcut used')
+        return
+      }
+
+      if (isFileShortcut && event.shiftKey && fileKey === 'e') {
+        event.preventDefault()
+        exportSvg()
+        setStatus('SVG export shortcut used')
         return
       }
 
@@ -1688,7 +1831,18 @@ function App() {
       }))
       markChanged(event.altKey ? 'Keyboard resized' : 'Keyboard nudged')
     },
-    [markChanged, removeConnector, removeNode, selectedConnector, selectedNode, showShortcuts],
+    [
+      exportPng,
+      exportSvg,
+      markChanged,
+      openBoard,
+      removeConnector,
+      removeNode,
+      saveBoard,
+      selectedConnector,
+      selectedNode,
+      showShortcuts,
+    ],
   )
 
   const handleWheel = useCallback(
@@ -1711,118 +1865,6 @@ function App() {
     },
     [screenToWorld, view.zoom],
   )
-
-  const saveBoard = useCallback(() => {
-    const seed = exportTimeStem()
-    const nextNames = buildExportNames(board.name, seed)
-    downloadBlob(
-      new Blob([serializeBoardFile(normalizeBoard(board))], { type: 'application/json' }),
-      nextNames.mapsmith,
-    )
-    setStatus('Board file prepared')
-  }, [board])
-
-  const openBoard = useCallback(() => {
-    fileInputRef.current?.click()
-  }, [])
-
-  const handleFileSelected = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    event.target.value = ''
-    if (!file) {
-      return
-    }
-
-    try {
-      const text = await file.text()
-      const parsedBoard = parseBoardFileText(text)
-
-      setBoard(normalizeBoard(parsedBoard))
-      setBoardTitleDraft(parsedBoard.name)
-      setSelectedId(parsedBoard.nodes[0]?.id ?? '')
-      setSelectedConnectorId('')
-      setConnectorStartId(null)
-      setStatus('Board loaded')
-      setLastChanged(nowLabel())
-    } catch {
-      setStatus('Could not load board')
-    }
-  }, [])
-
-  const resetBoard = useCallback(() => {
-    const nextBoard = normalizeBoard(createDemoBoard())
-    setBoard(nextBoard)
-    setBoardTitleDraft(nextBoard.name)
-    setSelectedId('local-first')
-    setSelectedConnectorId('')
-    setConnectorStartId(null)
-    setView(initialView)
-    setStatus('Demo board reset')
-    setLastChanged(nowLabel())
-  }, [])
-
-  const exportPng = useCallback(async () => {
-    const seed = exportTimeStem()
-    const nextNames = buildExportNames(board.name, seed)
-
-    if (!canvasRef.current) {
-      setStatus('Canvas not ready')
-      return
-    }
-
-    const bounds = getBounds(board.nodes)
-    const source = createSvgExport(board)
-    const image = new Image()
-    const url = URL.createObjectURL(
-      new Blob([source], { type: 'image/svg+xml;charset=utf-8' }),
-    )
-
-    await new Promise<void>((resolve, reject) => {
-      image.onload = () => resolve()
-      image.onerror = () => reject(new Error('Could not render SVG'))
-      image.src = url
-    })
-
-    const canvas = document.createElement('canvas')
-    canvas.width = Math.round(bounds.width)
-    canvas.height = Math.round(bounds.height)
-    const context = canvas.getContext('2d')
-    if (!context) {
-      URL.revokeObjectURL(url)
-      setStatus('PNG export failed')
-      return
-    }
-
-    context.fillStyle = '#f8fafc'
-    context.fillRect(0, 0, canvas.width, canvas.height)
-    context.drawImage(image, 0, 0)
-    URL.revokeObjectURL(url)
-
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'))
-    if (!blob) {
-      setStatus('PNG export failed')
-      return
-    }
-
-    downloadBlob(blob, nextNames.png)
-    setStatus('PNG export prepared')
-  }, [board])
-
-  const exportSvg = useCallback(() => {
-    const seed = exportTimeStem()
-    const nextNames = buildExportNames(board.name, seed)
-
-    if (!canvasRef.current) {
-      setStatus('Canvas not ready')
-      return
-    }
-
-    downloadBlob(
-      new Blob([createSvgExport(board)], { type: 'image/svg+xml;charset=utf-8' }),
-      nextNames.svg,
-    )
-    setStatus('SVG export prepared')
-  }, [board])
 
   const zoomLabel = `${Math.round(view.zoom * 100)}%`
 
@@ -1852,19 +1894,27 @@ function App() {
         </div>
 
         <div className="command-strip" aria-label="Board commands">
-          <button type="button" onClick={saveBoard} title="Save board">
+          <button type="button" onClick={saveBoard} title="Save board (Ctrl/Cmd + S)">
             <Save size={17} />
             <span>Save</span>
           </button>
-          <button type="button" onClick={openBoard} title="Open board">
+          <button type="button" onClick={openBoard} title="Open board (Ctrl/Cmd + O)">
             <FolderOpen size={17} />
             <span>Open</span>
           </button>
-          <button type="button" onClick={exportPng} title="Export PNG">
+          <button
+            type="button"
+            onClick={exportPng}
+            title="Export PNG (Ctrl/Cmd + Shift + P)"
+          >
             <ImageDown size={17} />
             <span>PNG</span>
           </button>
-          <button type="button" onClick={exportSvg} title="Export SVG">
+          <button
+            type="button"
+            onClick={exportSvg}
+            title="Export SVG (Ctrl/Cmd + Shift + E)"
+          >
             <FileInput size={17} />
             <span>SVG</span>
           </button>
@@ -2289,8 +2339,21 @@ function App() {
                   <dt>Files</dt>
                   <dd>
                     <span>Save</span>
+                    <kbd>Ctrl/Cmd</kbd>
+                    <span>+</span>
+                    <kbd>S</kbd>
                     <span>Open</span>
+                    <kbd>Ctrl/Cmd</kbd>
+                    <span>+</span>
+                    <kbd>O</kbd>
                     <span>PNG</span>
+                    <kbd>Ctrl/Cmd</kbd>
+                    <span>+Shift</span>
+                    <kbd>P</kbd>
+                    <span>SVG</span>
+                    <kbd>Ctrl/Cmd</kbd>
+                    <span>+Shift</span>
+                    <kbd>E</kbd>
                   </dd>
                 </div>
               </dl>
@@ -2321,6 +2384,43 @@ function App() {
               <strong>Self-host rooms</strong>
             </li>
           </ol>
+          <section className="file-shortcuts" aria-label="File shortcuts">
+            <h3>File shortcuts</h3>
+            <dl className="metadata-list file-shortcuts-list">
+              <div>
+                <dt>Save</dt>
+                <dd>
+                  <kbd>Ctrl/Cmd</kbd>
+                  <span>+</span>
+                  <kbd>S</kbd>
+                </dd>
+              </div>
+              <div>
+                <dt>Open</dt>
+                <dd>
+                  <kbd>Ctrl/Cmd</kbd>
+                  <span>+</span>
+                  <kbd>O</kbd>
+                </dd>
+              </div>
+              <div>
+                <dt>PNG</dt>
+                <dd>
+                  <kbd>Ctrl/Cmd</kbd>
+                  <span>+Shift</span>
+                  <kbd>P</kbd>
+                </dd>
+              </div>
+              <div>
+                <dt>SVG</dt>
+                <dd>
+                  <kbd>Ctrl/Cmd</kbd>
+                  <span>+Shift</span>
+                  <kbd>E</kbd>
+                </dd>
+              </div>
+            </dl>
+          </section>
           <section className="export-metadata" aria-label="Export metadata">
             <h3>Current Files</h3>
             <dl className="metadata-list">
