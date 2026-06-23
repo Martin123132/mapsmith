@@ -1284,6 +1284,24 @@ function App() {
     [markChanged, selectedConnector],
   )
 
+  const updateSelectedConnectorLabel = useCallback(
+    (rawLabel: string) => {
+      if (!selectedConnector) {
+        return
+      }
+
+      const nextLabel = rawLabel.trim() === '' ? undefined : rawLabel
+      setBoard((current) => ({
+        ...current,
+        connectors: current.connectors.map((connector) =>
+          connector.id === selectedConnector.id ? { ...connector, label: nextLabel } : connector,
+        ),
+      }))
+      markChanged('Connector label changed')
+    },
+    [markChanged, selectedConnector],
+  )
+
   const handleCanvasPointerDown = useCallback(
     (event: ReactPointerEvent<SVGSVGElement>) => {
       if (event.button !== 0) {
@@ -1869,6 +1887,14 @@ function App() {
                   </div>
                 </div>
                 <div>
+                  <dt>Label</dt>
+                  <input
+                    value={selectedConnector.label ?? ''}
+                    placeholder="Optional connector label"
+                    onChange={(event) => updateSelectedConnectorLabel(event.target.value)}
+                  />
+                </div>
+                <div>
                   <dt>To</dt>
                   <dd>
                     {selectedConnectorEndpoints.to.text}
@@ -1998,6 +2024,16 @@ function App() {
                       y1={start.y}
                       y2={end.y}
                     />
+                    {connector.label ? (
+                      <text
+                        className="connector-label"
+                        x={(start.x + end.x) / 2}
+                        y={(start.y + end.y) / 2}
+                        textAnchor="middle"
+                      >
+                        {connector.label}
+                      </text>
+                    ) : null}
                     {selectedConnectorId === connector.id ? (
                       <>
                         <circle className="connector-port" cx={start.x} cy={start.y} r="5.5" />

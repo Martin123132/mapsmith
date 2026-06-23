@@ -394,6 +394,7 @@
 
 .native-toolbar button:focus-visible,
 .inspector input:focus-visible,
+.connector-inspector input:focus-visible,
 .swatches button:focus-visible {
   outline: 3px solid rgba(255, 107, 53, 0.3);
   outline-offset: 2px;
@@ -428,6 +429,16 @@
 
 .connector-line {
   filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.8));
+}
+
+.connector-label {
+  fill: #334155;
+  font: 700 11px/1 var(--ui-font);
+  text-anchor: middle;
+  dominant-baseline: middle;
+  paint-order: stroke;
+  stroke: #ffffff;
+  stroke-width: 3px;
 }
 
 .connector.selected .connector-line {
@@ -695,6 +706,18 @@
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
+}
+
+.connector-inspector input {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 0 9px;
+  border: 1px solid #cfd6e2;
+  border-radius: 8px;
+  color: #111827;
+  background: #ffffff;
+  font: 700 13px/1 var(--ui-font);
 }
 
 .connector-inspector dd {

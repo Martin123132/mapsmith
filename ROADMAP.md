@@ -16,7 +16,7 @@ Mapsmith is early, but the direction is simple: a fast, local-first diagram edit
 
 ## Next
 
-- Connector polish: clearer routing, label editing, and attachment feedback.
+- Connector polish: clearer routing and attachment feedback.
 - Export polish: improve PNG/SVG naming and expand fixture coverage.
 - Test coverage: more import/export edge cases, keyboard controls, and connector port behavior.
 - Documentation: short usage clips, contributor setup, and architecture notes.

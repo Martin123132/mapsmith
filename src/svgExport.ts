@@ -20,6 +20,7 @@ export type ExportConnector = {
   to: string
   fromPort?: ExportPortName
   toPort?: ExportPortName
+  label?: string
   stroke: string
 }
 
@@ -172,12 +173,22 @@ const renderConnector = (
   }
 
   const { start, end } = connectorEndpoints(connector, from, to)
+  const hasLabel = typeof connector.label === 'string' && connector.label.trim() !== ''
+  const labelText =
+    hasLabel && typeof connector.label === 'string' ? escapeXml(connector.label.trim()) : ''
+  const labelX = formatNumber((start.x + end.x) / 2)
+  const labelY = formatNumber((start.y + end.y) / 2)
 
-  return `<line class="connector-line" x1="${formatNumber(start.x)}" y1="${formatNumber(
-    start.y,
-  )}" x2="${formatNumber(end.x)}" y2="${formatNumber(end.y)}" stroke="${escapeXml(
-    connector.stroke,
-  )}" stroke-width="3" stroke-linecap="round" marker-end="url(#mapsmith-arrowhead)" />`
+  return [
+    `<line class="connector-line" x1="${formatNumber(start.x)}" y1="${formatNumber(
+      start.y,
+    )}" x2="${formatNumber(end.x)}" y2="${formatNumber(end.y)}" stroke="${escapeXml(
+      connector.stroke,
+    )}" stroke-width="3" stroke-linecap="round" marker-end="url(#mapsmith-arrowhead)" />`,
+    hasLabel
+      ? `<text class="connector-label" x="${labelX}" y="${labelY}" text-anchor="middle" dominant-baseline="middle" font-size="12">${labelText}</text>`
+      : '',
+  ].join('')
 }
 
 export const createSvgExport = (board: ExportBoard): string => {
@@ -188,6 +199,13 @@ export const createSvgExport = (board: ExportBoard): string => {
     .filter((connector): connector is string => Boolean(connector))
     .join('')
   const nodes = board.nodes.map(renderNode).join('')
+  const style = [
+    '.diagram-node{font-family:Inter,Segoe UI,sans-serif}',
+    '.node-label{fill:#111827;font-family:Inter,Segoe UI,sans-serif;font-weight:700;pointer-events:none}',
+    '.canvas-title{fill:#111827;font-family:Inter,Segoe UI,sans-serif;font-weight:800}',
+    '.connector-line{fill:none}',
+    '.connector-label{font-size:12px;font-family:Inter,Segoe UI,sans-serif;font-weight:700;fill:#334155;stroke:#ffffff;stroke-width:3;paint-order:stroke;text-anchor:middle;dominant-baseline:middle}',
+  ].join('')
 
   return `<svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mapsmith export: ${escapeXml(
     board.name,
@@ -195,7 +213,7 @@ export const createSvgExport = (board: ExportBoard): string => {
     bounds.height,
   )}" viewBox="${formatNumber(bounds.x)} ${formatNumber(bounds.y)} ${formatNumber(
     bounds.width,
-  )} ${formatNumber(bounds.height)}"><defs><marker id="mapsmith-arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#26547c" /></marker><style>.diagram-node{font-family:Inter,Segoe UI,sans-serif}.node-label{fill:#111827;font-family:Inter,Segoe UI,sans-serif;font-weight:700;pointer-events:none}.canvas-title{fill:#111827;font-family:Inter,Segoe UI,sans-serif;font-weight:800}.connector-line{fill:none}</style></defs><rect class="export-background" x="${formatNumber(
+  )} ${formatNumber(bounds.height)}"><defs><marker id="mapsmith-arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#26547c" /></marker><style>${style}</style></defs><rect class="export-background" x="${formatNumber(
     bounds.x,
   )}" y="${formatNumber(bounds.y)}" width="${formatNumber(bounds.width)}" height="${formatNumber(
     bounds.height,

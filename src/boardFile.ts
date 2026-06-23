@@ -23,6 +23,7 @@ export type Connector = {
   to: string
   fromPort?: PortName
   toPort?: PortName
+  label?: string
   stroke: string
 }
 
@@ -84,6 +85,7 @@ const isConnector = (value: unknown): value is Connector => {
 
   const fromPortValid = value.fromPort === undefined || isPortName(value.fromPort)
   const toPortValid = value.toPort === undefined || isPortName(value.toPort)
+  const labelValid = value.label === undefined || isString(value.label)
 
   return (
     isString(value.id) &&
@@ -91,7 +93,8 @@ const isConnector = (value: unknown): value is Connector => {
     isString(value.to) &&
     isString(value.stroke) &&
     fromPortValid &&
-    toPortValid
+    toPortValid &&
+    labelValid
   )
 }
 
