@@ -27,6 +27,7 @@ Mapsmith currently includes:
 - Deterministic board JSON round-trip verification
 - PNG and SVG export with board-aware, timestamped filenames
 - Inline board title editing (keeps exported names aligned to the active board)
+- Starter templates for blank, flowchart, system map, and process map
 - Responsive editor layout for desktop and small screens
 
 ![Mapsmith keyboard shortcut overlay](docs/screenshots/mapsmith-shortcuts.png)

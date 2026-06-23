@@ -211,6 +211,75 @@
   font-weight: 800;
 }
 
+.template-panel {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: var(--panel-2);
+}
+
+.template-panel h3 {
+  margin: 0 0 2px;
+  color: #182230;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.template-panel label {
+  display: grid;
+  gap: 6px;
+  color: #475467;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.template-panel select {
+  width: 100%;
+  height: 36px;
+  border: 1px solid #cfd6e2;
+  border-radius: 8px;
+  color: #111827;
+  background: #ffffff;
+  padding: 0 10px;
+  font: 700 13px/1 var(--ui-font);
+}
+
+.template-panel select:focus-visible {
+  outline: 3px solid rgba(255, 107, 53, 0.3);
+  outline-offset: 2px;
+}
+
+.template-panel p {
+  margin: 0;
+  color: #475467;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.template-load {
+  height: 34px;
+  border: 1px solid #ff6b35;
+  border-radius: 8px;
+  color: #9f391e;
+  background: #fff0ea;
+  cursor: pointer;
+  font: 800 13px/1 var(--ui-font);
+}
+
+.template-load:hover {
+  background: #ffe2d5;
+}
+
+.template-load:focus-visible {
+  outline: 3px solid rgba(255, 107, 53, 0.3);
+  outline-offset: 2px;
+}
+
 .canvas-stage {
   position: relative;
   min-width: 0;

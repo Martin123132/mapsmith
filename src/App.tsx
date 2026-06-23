@@ -89,6 +89,15 @@ const tools: Array<{
   { icon: Waypoints, label: 'Connector', tool: 'connector' },
 ]
 
+type TemplateId = 'blank' | 'flowchart' | 'system-map' | 'process-map'
+
+type BoardTemplate = {
+  id: TemplateId
+  name: string
+  description: string
+  createBoard: () => Board
+}
+
 const palette = [
   '#fff4d6',
   '#dff3ff',
@@ -221,6 +230,370 @@ const createDemoBoard = (): Board => ({
     },
   ],
 })
+
+const createBlankBoardTemplate = (): Board => ({
+  name: 'Blank whiteboard',
+  nodes: [
+    {
+      id: 'blank-note',
+      kind: 'text',
+      x: -130,
+      y: -30,
+      width: 260,
+      height: 58,
+      fill: 'transparent',
+      stroke: '#111827',
+      text: 'Start your board here',
+      fontSize: 26,
+    },
+  ],
+  connectors: [],
+})
+
+const createFlowchartTemplate = (): Board => ({
+  name: 'Flowchart starter',
+  nodes: [
+    {
+      id: 'flow-start',
+      kind: 'rectangle',
+      x: -340,
+      y: -200,
+      width: 220,
+      height: 84,
+      fill: '#dff3ff',
+      stroke: '#1f2937',
+      text: 'Start',
+      fontSize: 20,
+    },
+    {
+      id: 'flow-process-a',
+      kind: 'rectangle',
+      x: -340,
+      y: -70,
+      width: 220,
+      height: 84,
+      fill: '#fff4d6',
+      stroke: '#1f2937',
+      text: 'Validate input',
+      fontSize: 18,
+    },
+    {
+      id: 'flow-decision',
+      kind: 'diamond',
+      x: -344,
+      y: 64,
+      width: 228,
+      height: 112,
+      fill: '#ffe5ec',
+      stroke: '#5f0f40',
+      text: 'Approved?',
+      fontSize: 19,
+    },
+    {
+      id: 'flow-process-b',
+      kind: 'rectangle',
+      x: -620,
+      y: 222,
+      width: 220,
+      height: 84,
+      fill: '#dcfce7',
+      stroke: '#1b4332',
+      text: 'Revise',
+      fontSize: 18,
+    },
+    {
+      id: 'flow-end',
+      kind: 'rectangle',
+      x: -340,
+      y: 222,
+      width: 220,
+      height: 84,
+      fill: '#dff3ff',
+      stroke: '#26547c',
+      text: 'Ship',
+      fontSize: 19,
+    },
+  ],
+  connectors: [
+    {
+      id: 'flow-c-1',
+      from: 'flow-start',
+      to: 'flow-process-a',
+      stroke: '#26547c',
+    },
+    {
+      id: 'flow-c-2',
+      from: 'flow-process-a',
+      to: 'flow-decision',
+      stroke: '#26547c',
+    },
+    {
+      id: 'flow-c-3',
+      from: 'flow-decision',
+      to: 'flow-process-b',
+      fromPort: 'west',
+      toPort: 'east',
+      stroke: '#5f0f40',
+    },
+    {
+      id: 'flow-c-4',
+      from: 'flow-decision',
+      to: 'flow-end',
+      fromPort: 'south',
+      toPort: 'north',
+      stroke: '#1b4332',
+    },
+  ],
+})
+
+const createSystemMapTemplate = (): Board => ({
+  name: 'System map starter',
+  nodes: [
+    {
+      id: 'sys-browser',
+      kind: 'rectangle',
+      x: -380,
+      y: -140,
+      width: 190,
+      height: 88,
+      fill: '#dff3ff',
+      stroke: '#1f2937',
+      text: 'Browser',
+      fontSize: 18,
+    },
+    {
+      id: 'sys-api',
+      kind: 'rectangle',
+      x: -70,
+      y: -140,
+      width: 190,
+      height: 88,
+      fill: '#fff4d6',
+      stroke: '#26547c',
+      text: 'API service',
+      fontSize: 18,
+    },
+    {
+      id: 'sys-db',
+      kind: 'ellipse',
+      x: 220,
+      y: -160,
+      width: 186,
+      height: 86,
+      fill: '#dcfce7',
+      stroke: '#1b4332',
+      text: 'Database',
+      fontSize: 17,
+    },
+    {
+      id: 'sys-worker',
+      kind: 'ellipse',
+      x: -70,
+      y: 50,
+      width: 190,
+      height: 86,
+      fill: '#f1ede2',
+      stroke: '#6c584c',
+      text: 'Worker',
+      fontSize: 18,
+    },
+    {
+      id: 'sys-cache',
+      kind: 'diamond',
+      x: 220,
+      y: 56,
+      width: 190,
+      height: 94,
+      fill: '#ffe5ec',
+      stroke: '#5f0f40',
+      text: 'Cache',
+      fontSize: 18,
+    },
+  ],
+  connectors: [
+    {
+      id: 'sys-c-1',
+      from: 'sys-browser',
+      to: 'sys-api',
+      fromPort: 'east',
+      toPort: 'west',
+      stroke: '#26547c',
+    },
+    {
+      id: 'sys-c-2',
+      from: 'sys-api',
+      to: 'sys-db',
+      fromPort: 'east',
+      toPort: 'west',
+      stroke: '#1b4332',
+    },
+    {
+      id: 'sys-c-3',
+      from: 'sys-api',
+      to: 'sys-worker',
+      fromPort: 'south',
+      toPort: 'north',
+      stroke: '#6c584c',
+    },
+    {
+      id: 'sys-c-4',
+      from: 'sys-worker',
+      to: 'sys-cache',
+      fromPort: 'east',
+      toPort: 'west',
+      stroke: '#5f0f40',
+    },
+    {
+      id: 'sys-c-5',
+      from: 'sys-cache',
+      to: 'sys-api',
+      fromPort: 'north',
+      toPort: 'south',
+      stroke: '#111827',
+    },
+  ],
+})
+
+const createProcessTemplate = (): Board => ({
+  name: 'Process map starter',
+  nodes: [
+    {
+      id: 'proc-input',
+      kind: 'text',
+      x: -350,
+      y: -220,
+      width: 260,
+      height: 58,
+      fill: 'transparent',
+      stroke: '#111827',
+      text: 'Customer request',
+      fontSize: 21,
+    },
+    {
+      id: 'proc-triage',
+      kind: 'rectangle',
+      x: -350,
+      y: -130,
+      width: 220,
+      height: 86,
+      fill: '#fff4d6',
+      stroke: '#1f2937',
+      text: 'Triage',
+      fontSize: 19,
+    },
+    {
+      id: 'proc-work',
+      kind: 'rectangle',
+      x: -350,
+      y: -20,
+      width: 220,
+      height: 86,
+      fill: '#dff3ff',
+      stroke: '#26547c',
+      text: 'Work',
+      fontSize: 19,
+    },
+    {
+      id: 'proc-review',
+      kind: 'diamond',
+      x: -354,
+      y: 96,
+      width: 230,
+      height: 118,
+      fill: '#ffe5ec',
+      stroke: '#5f0f40',
+      text: 'Passes QA?',
+      fontSize: 18,
+    },
+    {
+      id: 'proc-release',
+      kind: 'rectangle',
+      x: -350,
+      y: 248,
+      width: 220,
+      height: 86,
+      fill: '#dcfce7',
+      stroke: '#1b4332',
+      text: 'Release',
+      fontSize: 19,
+    },
+    {
+      id: 'proc-refine',
+      kind: 'rectangle',
+      x: -70,
+      y: 248,
+      width: 220,
+      height: 86,
+      fill: '#f1ede2',
+      stroke: '#6c584c',
+      text: 'Refine',
+      fontSize: 19,
+    },
+  ],
+  connectors: [
+    {
+      id: 'proc-c-1',
+      from: 'proc-input',
+      to: 'proc-triage',
+      stroke: '#1f2937',
+    },
+    {
+      id: 'proc-c-2',
+      from: 'proc-triage',
+      to: 'proc-work',
+      stroke: '#26547c',
+    },
+    {
+      id: 'proc-c-3',
+      from: 'proc-work',
+      to: 'proc-review',
+      stroke: '#26547c',
+    },
+    {
+      id: 'proc-c-4',
+      from: 'proc-review',
+      to: 'proc-release',
+      fromPort: 'south',
+      toPort: 'north',
+      stroke: '#1b4332',
+    },
+    {
+      id: 'proc-c-5',
+      from: 'proc-review',
+      to: 'proc-refine',
+      fromPort: 'east',
+      toPort: 'west',
+      stroke: '#5f0f40',
+    },
+  ],
+})
+
+const boardTemplates: BoardTemplate[] = [
+  {
+    id: 'blank',
+    name: 'Blank whiteboard',
+    description: 'Empty board with a starter note',
+    createBoard: createBlankBoardTemplate,
+  },
+  {
+    id: 'flowchart',
+    name: 'Flowchart starter',
+    description: 'A simple branching flow with one decision point',
+    createBoard: createFlowchartTemplate,
+  },
+  {
+    id: 'system-map',
+    name: 'System map starter',
+    description: 'Service, API, and data path template',
+    createBoard: createSystemMapTemplate,
+  },
+  {
+    id: 'process-map',
+    name: 'Process map starter',
+    description: 'Input-to-release process lane with QA loop',
+    createBoard: createProcessTemplate,
+  },
+]
 
 const initialView: View = { x: -365, y: -270, zoom: 1 }
 
@@ -541,6 +914,7 @@ function App() {
   const [canvasSize, setCanvasSize] = useState({ width: 960, height: 620 })
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [boardTitleDraft, setBoardTitleDraft] = useState(boardName)
+  const [templateId, setTemplateId] = useState<TemplateId>('flowchart')
 
   const selectedNode = useMemo(
     () => board.nodes.find((node) => node.id === selectedId) ?? null,
@@ -619,6 +993,27 @@ function App() {
       setStatus(`Could not copy ${label} filename`)
     }
   }, [])
+
+  const applyTemplate = useCallback(
+    (nextTemplateId: TemplateId) => {
+      const template = boardTemplates.find((entry) => entry.id === nextTemplateId)
+      if (!template) {
+        setStatus('Unknown template')
+        return
+      }
+
+      const nextBoard = normalizeBoard(template.createBoard())
+      setBoard(nextBoard)
+      setBoardTitleDraft(nextBoard.name)
+      setSelectedId(nextBoard.nodes[0]?.id ?? '')
+      setSelectedConnectorId('')
+      setConnectorStartId(null)
+      setView(initialView)
+      setStatus(`${template.name} template loaded`)
+      setLastChanged(nowLabel())
+    },
+    [],
+  )
 
   const markChanged = useCallback((nextStatus = 'Edited in memory') => {
     setLastChanged(nowLabel())
@@ -1200,6 +1595,32 @@ function App() {
               <dd>{status}</dd>
             </div>
           </dl>
+
+          <section className="template-panel" aria-label="Starter templates">
+            <h3>Starter Templates</h3>
+            <label>
+              <span>Load a blank board quickly</span>
+              <select
+                aria-label="Template board"
+                value={templateId}
+                onChange={(event) => setTemplateId(event.target.value as TemplateId)}
+              >
+                {boardTemplates.map((template) => (
+                  <option key={template.id} value={template.id}>
+                    {template.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <p>{boardTemplates.find((template) => template.id === templateId)?.description}</p>
+            <button
+              className="template-load"
+              type="button"
+              onClick={() => applyTemplate(templateId)}
+            >
+              Load Template
+            </button>
+          </section>
 
           {selectedNode ? (
             <form className="inspector" aria-label="Selected element inspector">
