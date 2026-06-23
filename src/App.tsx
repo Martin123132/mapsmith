@@ -1078,6 +1078,13 @@ function App() {
 
     return ''
   }, [selectedConnector, selectedIndex, selectedNode, selectableItems.length])
+  const connectorModeStatus = useMemo(() => {
+    if (tool !== 'connector') {
+      return ''
+    }
+
+    return connectorStartId ? `Connector target: ${connectorStartId}` : 'Connector source'
+  }, [connectorStartId, tool])
   const nodeMap = useMemo(
     () => new Map(board.nodes.map((node) => [node.id, node])),
     [board.nodes],
@@ -2571,10 +2578,9 @@ function App() {
           <div className="zoom-pill">{zoomLabel}</div>
           <div className="canvas-hint">
             {tool === 'connector'
-              ? connectorStartId
-                ? 'Connector target'
-                : 'Connector source'
+              ? `${tool[0].toUpperCase()}${tool.slice(1)} mode`
               : `${tool[0].toUpperCase()}${tool.slice(1)} mode${selectionLabel ? ` • ${selectionLabel}` : ''}`}
+            {connectorModeStatus ? <span className="connector-mode-chip">{connectorModeStatus}</span> : null}
           </div>
           {showShortcuts ? (
             <aside className="shortcut-card" aria-label="Keyboard shortcuts">
