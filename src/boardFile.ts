@@ -24,6 +24,9 @@ export type Connector = {
   fromPort?: PortName
   toPort?: PortName
   label?: string
+  labelOffsetX?: number
+  labelOffsetY?: number
+  showLabel?: boolean
   stroke: string
 }
 
@@ -86,6 +89,11 @@ const isConnector = (value: unknown): value is Connector => {
   const fromPortValid = value.fromPort === undefined || isPortName(value.fromPort)
   const toPortValid = value.toPort === undefined || isPortName(value.toPort)
   const labelValid = value.label === undefined || isString(value.label)
+  const labelOffsetXValid =
+    value.labelOffsetX === undefined || (isFiniteNumber(value.labelOffsetX) && Number.isFinite(value.labelOffsetX))
+  const labelOffsetYValid =
+    value.labelOffsetY === undefined || (isFiniteNumber(value.labelOffsetY) && Number.isFinite(value.labelOffsetY))
+  const showLabelValid = value.showLabel === undefined || typeof value.showLabel === 'boolean'
 
   return (
     isString(value.id) &&
@@ -94,7 +102,10 @@ const isConnector = (value: unknown): value is Connector => {
     isString(value.stroke) &&
     fromPortValid &&
     toPortValid &&
-    labelValid
+    labelValid &&
+    labelOffsetXValid &&
+    labelOffsetYValid &&
+    showLabelValid
   )
 }
 

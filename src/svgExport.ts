@@ -21,6 +21,9 @@ export type ExportConnector = {
   fromPort?: ExportPortName
   toPort?: ExportPortName
   label?: string
+  labelOffsetX?: number
+  labelOffsetY?: number
+  showLabel?: boolean
   stroke: string
 }
 
@@ -173,11 +176,14 @@ const renderConnector = (
   }
 
   const { start, end } = connectorEndpoints(connector, from, to)
-  const hasLabel = typeof connector.label === 'string' && connector.label.trim() !== ''
+  const hasLabel =
+    typeof connector.label === 'string' &&
+    connector.label.trim() !== '' &&
+    connector.showLabel !== false
   const labelText =
     hasLabel && typeof connector.label === 'string' ? escapeXml(connector.label.trim()) : ''
-  const labelX = formatNumber((start.x + end.x) / 2)
-  const labelY = formatNumber((start.y + end.y) / 2)
+  const labelX = formatNumber((start.x + end.x) / 2 + (connector.labelOffsetX ?? 0))
+  const labelY = formatNumber((start.y + end.y) / 2 + (connector.labelOffsetY ?? 0))
 
   return [
     `<line class="connector-line" x1="${formatNumber(start.x)}" y1="${formatNumber(

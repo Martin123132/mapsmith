@@ -1294,10 +1294,60 @@ function App() {
       setBoard((current) => ({
         ...current,
         connectors: current.connectors.map((connector) =>
-          connector.id === selectedConnector.id ? { ...connector, label: nextLabel } : connector,
+          connector.id === selectedConnector.id
+            ? {
+                ...connector,
+                label: nextLabel,
+                showLabel: nextLabel === undefined ? false : true,
+              }
+            : connector,
         ),
       }))
       markChanged('Connector label changed')
+    },
+    [markChanged, selectedConnector],
+  )
+
+  const updateSelectedConnectorLabelOffset = useCallback(
+    (axis: 'x' | 'y', value: string) => {
+      if (!selectedConnector) {
+        return
+      }
+
+      const nextValue = value.trim() === '' ? 0 : Number(value)
+      if (Number.isNaN(nextValue)) {
+        return
+      }
+
+      setBoard((current) => ({
+        ...current,
+        connectors: current.connectors.map((connector) =>
+          connector.id === selectedConnector.id
+            ? {
+                ...connector,
+                [axis === 'x' ? 'labelOffsetX' : 'labelOffsetY']: nextValue,
+              }
+            : connector,
+        ),
+      }))
+      markChanged('Connector label position changed')
+    },
+    [markChanged, selectedConnector],
+  )
+
+  const updateSelectedConnectorLabelVisibility = useCallback(
+    (nextValue: boolean) => {
+      if (!selectedConnector) {
+        return
+      }
+
+      setBoard((current) => ({
+        ...current,
+        connectors: current.connectors.map((connector) =>
+          connector.id === selectedConnector.id ? { ...connector, showLabel: nextValue } : connector,
+        ),
+      }))
+      markChanged('Connector label visibility changed')
     },
     [markChanged, selectedConnector],
   )
@@ -1893,6 +1943,36 @@ function App() {
                     placeholder="Optional connector label"
                     onChange={(event) => updateSelectedConnectorLabel(event.target.value)}
                   />
+                  <label className="connector-label-control">
+                    <span>Show label</span>
+                    <input
+                      type="checkbox"
+                      checked={selectedConnector.showLabel !== false && Boolean(selectedConnector.label)}
+                      onChange={(event) => updateSelectedConnectorLabelVisibility(event.target.checked)}
+                    />
+                  </label>
+                  <label className="connector-label-control">
+                    <span>Offset X</span>
+                    <input
+                      type="number"
+                      value={selectedConnector.labelOffsetX ?? 0}
+                      step="1"
+                      onChange={(event) =>
+                        updateSelectedConnectorLabelOffset('x', event.target.value)
+                      }
+                    />
+                  </label>
+                  <label className="connector-label-control">
+                    <span>Offset Y</span>
+                    <input
+                      type="number"
+                      value={selectedConnector.labelOffsetY ?? 0}
+                      step="1"
+                      onChange={(event) =>
+                        updateSelectedConnectorLabelOffset('y', event.target.value)
+                      }
+                    />
+                  </label>
                 </div>
                 <div>
                   <dt>To</dt>
@@ -2024,11 +2104,11 @@ function App() {
                       y1={start.y}
                       y2={end.y}
                     />
-                    {connector.label ? (
+                    {connector.label && connector.showLabel !== false ? (
                       <text
                         className="connector-label"
-                        x={(start.x + end.x) / 2}
-                        y={(start.y + end.y) / 2}
+                        x={(start.x + end.x) / 2 + (connector.labelOffsetX ?? 0)}
+                        y={(start.y + end.y) / 2 + (connector.labelOffsetY ?? 0)}
                         textAnchor="middle"
                       >
                         {connector.label}
