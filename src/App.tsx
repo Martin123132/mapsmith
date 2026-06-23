@@ -1923,6 +1923,22 @@ function App() {
         return
       }
 
+      if (selectedConnector) {
+        const portMap: Record<string, PortName> = {
+          n: 'north',
+          e: 'east',
+          s: 'south',
+          w: 'west',
+        }
+
+        const connectorPort = portMap[fileKey]
+        if (connectorPort) {
+          event.preventDefault()
+          updateSelectedConnectorPort(event.shiftKey ? 'toPort' : 'fromPort', connectorPort)
+          return
+        }
+      }
+
       if (selectedConnector && event.key === '0') {
         event.preventDefault()
         updateBoard(
@@ -2007,6 +2023,7 @@ function App() {
       removeNode,
       saveBoard,
       selectedConnector,
+      updateSelectedConnectorPort,
       selectedNode,
       undo,
       updateBoard,
@@ -2516,6 +2533,14 @@ function App() {
                 <div>
                   <dt>Ports</dt>
                   <dd>
+                    <span>From:</span>
+                    <kbd>N</kbd>
+                    <kbd>E</kbd>
+                    <kbd>S</kbd>
+                    <kbd>W</kbd>
+                    <span>To:</span>
+                    <kbd>Shift</kbd>
+                    <span>+</span>
                     <kbd>N</kbd>
                     <kbd>E</kbd>
                     <kbd>S</kbd>
