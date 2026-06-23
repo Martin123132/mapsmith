@@ -883,6 +883,26 @@ const resizeNodeByKeyboard = (
   return { ...node, height: node.height + step }
 }
 
+const nudgeConnectorLabelOffset = (
+  connector: Connector,
+  direction: 'left' | 'right' | 'up' | 'down',
+  step: number,
+): Connector => {
+  if (direction === 'left') {
+    return { ...connector, labelOffsetX: (connector.labelOffsetX ?? 0) - step }
+  }
+
+  if (direction === 'right') {
+    return { ...connector, labelOffsetX: (connector.labelOffsetX ?? 0) + step }
+  }
+
+  if (direction === 'up') {
+    return { ...connector, labelOffsetY: (connector.labelOffsetY ?? 0) - step }
+  }
+
+  return { ...connector, labelOffsetY: (connector.labelOffsetY ?? 0) + step }
+}
+
 const getBounds = (nodes: DiagramNode[]) => {
   if (nodes.length === 0) {
     return { x: -420, y: -280, width: 840, height: 560 }
@@ -1585,7 +1605,30 @@ function App() {
         return
       }
 
-      if (!selectedNode || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+      if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+        return
+      }
+
+      if (selectedConnector) {
+        event.preventDefault()
+        const step = event.shiftKey ? 10 : 1
+        const direction = event.key.replace('Arrow', '').toLowerCase() as
+          | 'left'
+          | 'right'
+          | 'up'
+          | 'down'
+
+        setBoard((current) => ({
+          ...current,
+          connectors: current.connectors.map((connector) =>
+            connector.id === selectedConnector.id ? nudgeConnectorLabelOffset(connector, direction, step) : connector,
+          ),
+        }))
+        markChanged('Connector label nudged')
+        return
+      }
+
+      if (!selectedNode) {
         return
       }
 
@@ -2167,12 +2210,21 @@ function App() {
                   </dd>
                 </div>
                 <div>
-                  <dt>Nudge</dt>
+                  <dt>Nudge Node</dt>
                   <dd>
                     <kbd>Arrows</kbd>
                     <span>1px</span>
                     <kbd>Shift</kbd>
                     <span>10px</span>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Nudge Connector Label</dt>
+                  <dd>
+                    <kbd>Arrows</kbd>
+                    <span>1px</span>
+                    <kbd>Shift</kbd>
+                    <span>10px (selected connector)</span>
                   </dd>
                 </div>
                 <div>
