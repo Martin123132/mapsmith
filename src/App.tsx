@@ -1054,17 +1054,30 @@ function App() {
 
     return 'Press ? for keyboard shortcuts. Press Tab to cycle selection, Shift+Tab previous'
   }, [selectedConnector, selectedNode, showShortcuts])
-  const selectionLabel = useMemo(() => {
+  const selectedIndex = useMemo(() => {
     if (selectedConnector) {
-      return `Connector ${selectedConnector.id}`
+      return selectableItems.findIndex(
+        (item) => item.kind === 'connector' && item.id === selectedConnector.id,
+      )
     }
 
     if (selectedNode) {
-      return `Node ${selectedNode.id}`
+      return selectableItems.findIndex((item) => item.kind === 'node' && item.id === selectedNode.id)
+    }
+
+    return -1
+  }, [selectableItems, selectedConnector, selectedNode])
+  const selectionLabel = useMemo(() => {
+    if (selectedConnector) {
+      return `Connector ${selectedConnector.id} (${selectedIndex + 1}/${selectableItems.length})`
+    }
+
+    if (selectedNode) {
+      return `Node ${selectedNode.id} (${selectedIndex + 1}/${selectableItems.length})`
     }
 
     return ''
-  }, [selectedConnector, selectedNode])
+  }, [selectedConnector, selectedIndex, selectedNode, selectableItems.length])
   const nodeMap = useMemo(
     () => new Map(board.nodes.map((node) => [node.id, node])),
     [board.nodes],
@@ -1297,6 +1310,16 @@ function App() {
     },
     [markBoardChange, pushBoardHistory],
   )
+  const reportSelection = useCallback(
+    (item: SelectableBoardItem | null, position: number | null = null) => {
+      if (!item || position === null || position < 0 || selectableItems.length === 0) {
+        return
+      }
+
+      setStatus(`Selected ${item.kind} ${item.id} (${(position + 1).toString()}/${selectableItems.length.toString()})`)
+    },
+    [selectableItems.length],
+  )
   const cycleSelection = useCallback(
     (direction: 1 | -1) => {
       if (selectableItems.length === 0) {
@@ -1323,9 +1346,9 @@ function App() {
         setSelectedConnectorId(next.id)
       }
       setConnectorStartId(null)
-      setStatus(`Selected ${next.kind}: ${next.id}`)
+      reportSelection(next, nextIndex)
     },
-    [selectableItems, selectedConnectorId, selectedId],
+    [reportSelection, selectableItems, selectedConnectorId, selectedId],
   )
 
   const canUndo = history.length > 1
@@ -1656,6 +1679,10 @@ function App() {
       setSelectedId(node.id)
       setSelectedConnectorId('')
       setConnectorStartId(null)
+      reportSelection(
+        { kind: 'node', id: node.id },
+        selectableItems.findIndex((item) => item.kind === 'node' && item.id === node.id),
+      )
       canvasRef.current?.focus()
       hasDraggedRef.current = false
       dragStartBoardRef.current = boardSnapshot(boardRef.current)
@@ -1667,7 +1694,7 @@ function App() {
       })
       setStatus('Selected node')
     },
-    [connectorStartId, nodeMap, screenToWorld, tool, updateBoard],
+    [connectorStartId, nodeMap, screenToWorld, tool, reportSelection, selectableItems, updateBoard],
   )
 
   const handleResizePointerDown = useCallback(
@@ -1698,10 +1725,13 @@ function App() {
       setSelectedConnectorId(connector.id)
       setConnectorStartId(null)
       setTool('select')
-      setStatus('Selected connector')
+      reportSelection(
+        { kind: 'connector', id: connector.id },
+        selectableItems.findIndex((item) => item.kind === 'connector' && item.id === connector.id),
+      )
       canvasRef.current?.focus()
     },
-    [],
+    [selectableItems, reportSelection],
   )
 
   const handlePointerMove = useCallback(
