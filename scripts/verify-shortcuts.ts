@@ -116,6 +116,8 @@ const requiredShortcutText = [
   '<dt>Ports</dt>',
   '<span>From:</span>',
   '<span>To:</span>',
+  'Press Tab to cycle selection',
+  'Shift+Tab previous',
   '<dt>History</dt>',
   '<h3>File shortcuts</h3>',
   '<dt>Undo</dt>',

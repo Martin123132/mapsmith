@@ -77,6 +77,11 @@ type Point = {
 
 type ResizeHandle = 'nw' | 'ne' | 'se' | 'sw'
 
+type SelectableBoardItem = {
+  kind: 'node' | 'connector'
+  id: string
+}
+
 const portLabels: Record<PortName, string> = {
   north: 'North',
   east: 'East',
@@ -1025,6 +1030,13 @@ function App() {
     () => board.connectors.find((connector) => connector.id === selectedConnectorId) ?? null,
     [board.connectors, selectedConnectorId],
   )
+  const selectableItems: SelectableBoardItem[] = useMemo(
+    () => [
+      ...board.nodes.map((node) => ({ kind: 'node' as const, id: node.id })),
+      ...board.connectors.map((connector) => ({ kind: 'connector' as const, id: connector.id })),
+    ],
+    [board.nodes, board.connectors],
+  )
 
   const elementCount = board.nodes.length + board.connectors.length
   const shortcutHint = useMemo(() => {
@@ -1040,7 +1052,7 @@ function App() {
       return 'Shortcut panel open: press ? again to close'
     }
 
-    return 'Press ? for keyboard shortcuts'
+      return 'Press ? for keyboard shortcuts. Press Tab to cycle selection, Shift+Tab previous'
   }, [selectedConnector, selectedNode, showShortcuts])
   const nodeMap = useMemo(
     () => new Map(board.nodes.map((node) => [node.id, node])),
@@ -1273,6 +1285,36 @@ function App() {
       markBoardChange(status)
     },
     [markBoardChange, pushBoardHistory],
+  )
+  const cycleSelection = useCallback(
+    (direction: 1 | -1) => {
+      if (selectableItems.length === 0) {
+        setStatus('No items to select')
+        return
+      }
+
+      const currentIndex = selectableItems.findIndex(
+        (item) =>
+          (item.kind === 'node' && item.id === selectedId) ||
+          (item.kind === 'connector' && item.id === selectedConnectorId),
+      )
+      const nextIndex =
+        currentIndex === -1
+          ? (direction === 1 ? 0 : selectableItems.length - 1)
+          : (currentIndex + direction + selectableItems.length) % selectableItems.length
+      const next = selectableItems[nextIndex]
+
+      if (next.kind === 'node') {
+        setSelectedId(next.id)
+        setSelectedConnectorId('')
+      } else {
+        setSelectedId('')
+        setSelectedConnectorId(next.id)
+      }
+      setConnectorStartId(null)
+      setStatus(`Selected ${next.kind}: ${next.id}`)
+    },
+    [selectableItems, selectedConnectorId, selectedId],
   )
 
   const canUndo = history.length > 1
@@ -1875,6 +1917,12 @@ function App() {
         return
       }
 
+      if (event.key === 'Tab') {
+        event.preventDefault()
+        cycleSelection(event.shiftKey ? -1 : 1)
+        return
+      }
+
       if (event.key === '?' || (event.shiftKey && event.key === '/')) {
         event.preventDefault()
         setShowShortcuts((current) => !current)
@@ -2019,6 +2067,7 @@ function App() {
       exportSvg,
       openBoard,
       redo,
+      cycleSelection,
       removeConnector,
       removeNode,
       saveBoard,
@@ -2489,6 +2538,10 @@ function App() {
                     <span>Clear</span>
                     <kbd>Del</kbd>
                     <span>Delete</span>
+                    <kbd>Tab</kbd>
+                    <span>next</span>
+                    <kbd>Shift</kbd>
+                    <span>+Tab previous</span>
                   </dd>
                 </div>
                 <div>
