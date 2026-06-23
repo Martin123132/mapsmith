@@ -1622,6 +1622,24 @@ function App() {
         return
       }
 
+      if (selectedConnector && event.key === '0') {
+        event.preventDefault()
+        setBoard((current) => ({
+          ...current,
+          connectors: current.connectors.map((connector) =>
+            connector.id === selectedConnector.id
+              ? {
+                  ...connector,
+                  labelOffsetX: 0,
+                  labelOffsetY: 0,
+                }
+              : connector,
+          ),
+        }))
+        markChanged('Connector label offset reset')
+        return
+      }
+
       if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
         return
       }
@@ -2249,6 +2267,13 @@ function App() {
                   <dd>
                     <kbd>L</kbd>
                     <span>Show/hide selected connector label</span>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Reset Connector Label</dt>
+                  <dd>
+                    <kbd>0</kbd>
+                    <span>Reset selected connector label position</span>
                   </dd>
                 </div>
                 <div>
