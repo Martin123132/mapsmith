@@ -217,7 +217,8 @@
 }
 
 .autosave-panel,
-.template-panel {
+.template-panel,
+.import-help {
   display: grid;
   gap: 8px;
   margin-top: 12px;
@@ -228,12 +229,36 @@
 }
 
 .template-panel h3,
-.autosave-panel h3 {
+.autosave-panel h3,
+.import-help h3 {
   margin: 0 0 2px;
   color: #182230;
   font-size: 13px;
   font-weight: 800;
   text-transform: uppercase;
+}
+
+.import-help p {
+  margin: 0;
+  color: #475467;
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.import-help ul {
+  margin: 0;
+  padding-inline-start: 18px;
+  color: #475467;
+  font-size: 11px;
+  display: grid;
+  gap: 4px;
+}
+
+.import-help code {
+  border: 1px solid #dbe3ef;
+  border-radius: 6px;
+  padding: 0 4px;
+  background: #f8fafc;
 }
 
 .template-panel label {

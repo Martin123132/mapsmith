@@ -27,7 +27,13 @@ import type {
   PointerEvent as ReactPointerEvent,
 } from 'react'
 import './App.css'
-import { isBoard, parseBoardFileText, serializeBoardFile } from './boardFile'
+import {
+  BOARD_FILE_TYPE,
+  BOARD_VERSION,
+  isBoard,
+  parseBoardFileText,
+  serializeBoardFile,
+} from './boardFile'
 import type { Board, Connector, DiagramNode, PortName, ShapeKind } from './boardFile'
 import { createSvgExport } from './svgExport'
 import {
@@ -88,6 +94,12 @@ const portLabels: Record<PortName, string> = {
   south: 'South',
   west: 'West',
 }
+
+const importHelp = {
+  wrapped: `${BOARD_FILE_TYPE} (version ${BOARD_VERSION})`,
+  legacyRaw: '{ name, nodes, connectors }',
+  supportedExtensions: '.mapsmith, .canvasforge, .json',
+} as const
 
 const portNames: PortName[] = ['north', 'east', 'south', 'west']
 
@@ -2368,6 +2380,20 @@ function App() {
               </button>
             </div>
             {autosaveState.error ? <p className="autosave-warning">{autosaveState.error}</p> : null}
+          </section>
+
+          <section className="import-help" aria-label="Import support">
+            <h3>Import support</h3>
+            <p>Accepted board formats:</p>
+            <ul>
+              <li>Wrapped format: <code>{importHelp.wrapped}</code></li>
+              <li>Accepted extensions: <code>{importHelp.supportedExtensions}</code></li>
+              <li>Raw board object: <code>{importHelp.legacyRaw}</code></li>
+            </ul>
+            <p>
+              Errors appear in Status with a reason, for example:
+              <code>Unsupported board file type</code>.
+            </p>
           </section>
 
           <section className="template-panel" aria-label="Starter templates">
