@@ -992,12 +992,12 @@ function App() {
   const canvasRef = useRef<SVGSVGElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const hasDraggedRef = useRef(false)
-  const boardRef = useRef<Board>(createDemoBoard())
   const initialDraft = useMemo(() => loadBoardDraft(), [])
   const initialBoard = useMemo(
     () => normalizeBoard(initialDraft?.board ?? createDemoBoard()),
     [initialDraft],
   )
+  const boardRef = useRef<Board>(initialBoard)
   const [board, setBoard] = useState<Board>(() => initialBoard)
   const [view, setView] = useState<View>(initialView)
   const [tool, setTool] = useState<Tool>('select')
@@ -1019,8 +1019,20 @@ function App() {
     savedAt: initialDraft?.savedAt ?? null,
     error: '',
   }))
+  const lastSavedBoardRef = useRef<Board>(boardSnapshot(initialBoard))
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const autosaveInitializedRef = useRef(false)
   const autosaveTimerRef = useRef<number | null>(null)
+
+  const setSavedBoardCheckpoint = useCallback((nextBoard: Board) => {
+    lastSavedBoardRef.current = boardSnapshot(normalizeBoard(nextBoard))
+    setHasUnsavedChanges(false)
+  }, [])
+
+  const syncUnsavedState = useCallback((nextBoard: Board) => {
+    const normalized = boardSnapshot(normalizeBoard(nextBoard))
+    setHasUnsavedChanges(!areBoardsEqual(normalized, lastSavedBoardRef.current))
+  }, [])
 
   const selectedNode = useMemo(
     () => board.nodes.find((node) => node.id === selectedId) ?? null,
@@ -1142,6 +1154,20 @@ function App() {
   useEffect(() => {
     boardRef.current = board
   }, [board])
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) {
+      return
+    }
+
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = 'You have unsaved changes in Mapsmith.'
+    }
+
+    window.addEventListener('beforeunload', onBeforeUnload)
+    return () => window.removeEventListener('beforeunload', onBeforeUnload)
+  }, [hasUnsavedChanges])
 
   const copyExportName = useCallback(async (label: string, filename: string) => {
     if (!navigator.clipboard) {
@@ -1287,6 +1313,7 @@ function App() {
 
   const updateBoard = useCallback(
     (mutator: (current: Board) => Board, status = 'Edited in memory') => {
+      let nextBoardForCommit: Board | null = null
       setBoard((current) => {
         const nextBoard = boardSnapshot(normalizeBoard(mutator(current)))
         if (areBoardsEqual(current, nextBoard)) {
@@ -1294,11 +1321,15 @@ function App() {
         }
 
         pushBoardHistory(current, nextBoard)
+        nextBoardForCommit = nextBoard
         return nextBoard
       })
+      if (nextBoardForCommit) {
+        syncUnsavedState(nextBoardForCommit)
+      }
       markBoardChange(status)
     },
-    [markBoardChange, pushBoardHistory],
+    [markBoardChange, pushBoardHistory, syncUnsavedState],
   )
 
   const recordBoardSnapshot = useCallback(
@@ -1373,8 +1404,9 @@ function App() {
     setFuture((currentFuture) => [boardSnapshot(normalizeBoard(boardRef.current)), ...currentFuture].slice(0, HISTORY_LIMIT))
     setBoard(previousState)
     syncSelectionWithBoard(previousState)
+    syncUnsavedState(previousState)
     markBoardChange('Undo')
-  }, [history, markBoardChange, syncSelectionWithBoard])
+  }, [history, markBoardChange, syncSelectionWithBoard, syncUnsavedState])
 
   const redo = useCallback(() => {
     if (future.length < 1) {
@@ -1387,8 +1419,9 @@ function App() {
     setFuture((currentFuture) => currentFuture.slice(1))
     setBoard(nextState)
     syncSelectionWithBoard(nextState)
+    syncUnsavedState(nextState)
     markBoardChange('Redo')
-  }, [future, markBoardChange, syncSelectionWithBoard])
+  }, [future, markBoardChange, syncSelectionWithBoard, syncUnsavedState])
 
   const recoverDraft = useCallback(() => {
     const draft = loadBoardDraft()
@@ -1407,8 +1440,9 @@ function App() {
     setBoardTitleDraft(nextBoard.name)
     setView(initialView)
     syncSelectionWithBoard(nextBoard)
+    setSavedBoardCheckpoint(nextBoard)
     setAutosaveState({ hasDraft: true, savedAt: draft.savedAt, error: '' })
-  }, [syncSelectionWithBoard, updateBoard])
+  }, [setSavedBoardCheckpoint, syncSelectionWithBoard, updateBoard])
 
   const applyTemplate = useCallback(
     (nextTemplateId: TemplateId) => {
@@ -1422,8 +1456,9 @@ function App() {
       updateBoard(() => nextBoard, `${template.name} template loaded`)
       setBoardTitleDraft(nextBoard.name)
       setView(initialView)
+      setSavedBoardCheckpoint(nextBoard)
     },
-    [updateBoard],
+    [setSavedBoardCheckpoint, updateBoard],
   )
 
   const applyBoardTitle = useCallback(() => {
@@ -1766,14 +1801,22 @@ function App() {
           x: point.x - dragState.startPoint.x,
           y: point.y - dragState.startPoint.y,
         }
-        setBoard((current) => ({
-          ...current,
-          nodes: current.nodes.map((node) =>
-            node.id === dragState.id
-              ? resizeNode(dragState.startNode, dragState.handle, delta)
-              : node,
-          ),
-        }))
+        let nextBoard: Board | null = null
+        setBoard((current) => {
+          const next = {
+            ...current,
+            nodes: current.nodes.map((node) =>
+              node.id === dragState.id
+                ? resizeNode(dragState.startNode, dragState.handle, delta)
+                : node,
+            ),
+          }
+          nextBoard = next
+          return next
+        })
+        if (nextBoard) {
+          syncUnsavedState(nextBoard)
+        }
         setLastChanged(nowLabel())
         setStatus('Resizing node')
         return
@@ -1781,22 +1824,29 @@ function App() {
 
       const point = screenToWorld(event.clientX, event.clientY)
       hasDraggedRef.current = true
-      setBoard((current) => ({
-        ...current,
-        nodes: current.nodes.map((node) =>
-          node.id === dragState.id
-            ? {
-                ...node,
-                x: point.x - dragState.offsetX,
-                y: point.y - dragState.offsetY,
-              }
-            : node,
-        ),
-      }))
+      let nextBoard: Board | null = null
+      setBoard((current) => {
+        nextBoard = {
+          ...current,
+          nodes: current.nodes.map((node) =>
+            node.id === dragState.id
+              ? {
+                  ...node,
+                  x: point.x - dragState.offsetX,
+                  y: point.y - dragState.offsetY,
+                }
+              : node,
+          ),
+        }
+        return nextBoard
+      })
+      if (nextBoard) {
+        syncUnsavedState(nextBoard)
+      }
       setLastChanged(nowLabel())
       setStatus('Moving node')
     },
-    [dragState, screenToWorld],
+    [dragState, screenToWorld, syncUnsavedState],
   )
 
   const handlePointerUp = useCallback(() => {
@@ -1814,12 +1864,14 @@ function App() {
   const saveBoard = useCallback(() => {
     const seed = exportTimeStem()
     const nextNames = buildExportNames(board.name, seed)
+    const normalized = normalizeBoard(board)
     downloadBlob(
-      new Blob([serializeBoardFile(normalizeBoard(board))], { type: 'application/json' }),
+      new Blob([serializeBoardFile(normalized)], { type: 'application/json' }),
       nextNames.mapsmith,
     )
+    setSavedBoardCheckpoint(normalized)
     setStatus('Board file prepared')
-  }, [board])
+  }, [board, setSavedBoardCheckpoint])
 
   const openBoard = useCallback(() => {
     fileInputRef.current?.click()
@@ -1840,10 +1892,11 @@ function App() {
       updateBoard(() => nextBoard, 'Board loaded')
       setBoardTitleDraft(parsedBoard.name)
       syncSelectionWithBoard(nextBoard)
+      setSavedBoardCheckpoint(nextBoard)
     } catch {
       setStatus('Could not load board')
     }
-  }, [syncSelectionWithBoard, updateBoard])
+  }, [setSavedBoardCheckpoint, syncSelectionWithBoard, updateBoard])
 
   const resetBoard = useCallback(() => {
     const nextBoard = normalizeBoard(createDemoBoard())
@@ -1851,7 +1904,8 @@ function App() {
     setBoardTitleDraft(nextBoard.name)
     syncSelectionWithBoard(nextBoard)
     setView(initialView)
-  }, [syncSelectionWithBoard, updateBoard])
+    setSavedBoardCheckpoint(nextBoard)
+  }, [setSavedBoardCheckpoint, syncSelectionWithBoard, updateBoard])
 
   const exportPng = useCallback(async () => {
     const seed = exportTimeStem()
@@ -2249,6 +2303,12 @@ function App() {
             <div>
               <dt>Changed</dt>
               <dd>{lastChanged}</dd>
+            </div>
+            <div>
+              <dt>Unsaved</dt>
+              <dd className={hasUnsavedChanges ? 'unsaved unsaved-changes' : 'unsaved'}>
+                {hasUnsavedChanges ? 'Unsaved changes' : 'Saved'}
+              </dd>
             </div>
             <div>
               <dt>Status</dt>

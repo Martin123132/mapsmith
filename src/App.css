@@ -197,6 +197,11 @@
   font-weight: 720;
 }
 
+.unsaved.unsaved-changes {
+  color: #b54708;
+  font-weight: 820;
+}
+
 .format-block {
   display: flex;
   align-items: center;
