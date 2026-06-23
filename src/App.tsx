@@ -6,6 +6,7 @@ import {
   FolderOpen,
   ImageDown,
   Keyboard,
+  History,
   MousePointer2,
   Move,
   PanelRightClose,
@@ -24,11 +25,13 @@ import type {
   PointerEvent as ReactPointerEvent,
 } from 'react'
 import './App.css'
-import { parseBoardFileText, serializeBoardFile } from './boardFile'
+import { isBoard, parseBoardFileText, serializeBoardFile } from './boardFile'
 import type { Board, Connector, DiagramNode, PortName, ShapeKind } from './boardFile'
 import { createSvgExport } from './svgExport'
 
 const boardName = 'Mapsmith demo board'
+const AUTOSAVE_KEY = 'mapsmith-board-draft-v1'
+const AUTOSAVE_VERSION = 1
 
 type Tool = 'select' | 'pan' | ShapeKind | 'connector'
 
@@ -600,6 +603,19 @@ const initialView: View = { x: -365, y: -270, zoom: 1 }
 const createId = (prefix: string) =>
   `${prefix}-${Math.random().toString(36).slice(2, 8)}-${Date.now().toString(36)}`
 
+type BoardDraftRecord = {
+  type: 'mapsmith-board-draft'
+  version: typeof AUTOSAVE_VERSION
+  savedAt: number
+  board: Board
+}
+
+type AutosaveState = {
+  hasDraft: boolean
+  savedAt: number | null
+  error: string
+}
+
 const safeFileStem = (name: string) =>
   name
     .trim()
@@ -617,6 +633,56 @@ const nowLabel = () =>
 
 const exportTimeStem = () =>
   new Date().toISOString().replace(/T/g, '-').replace(/\..+?$/, '').replace(/:/g, '-')
+
+const isBoardDraftRecord = (value: unknown): value is BoardDraftRecord => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return false
+  }
+
+  const candidate = value as {
+    type?: unknown
+    version?: unknown
+    savedAt?: unknown
+    board?: unknown
+  }
+
+  return (
+    candidate.type === 'mapsmith-board-draft' &&
+    candidate.version === AUTOSAVE_VERSION &&
+    typeof candidate.savedAt === 'number' &&
+    Number.isFinite(candidate.savedAt) &&
+    isBoard(candidate.board)
+  )
+}
+
+const loadBoardDraft = (): BoardDraftRecord | null => {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return null
+  }
+
+  try {
+    const raw = window.localStorage.getItem(AUTOSAVE_KEY)
+    if (!raw) {
+      return null
+    }
+
+    const parsed: unknown = JSON.parse(raw)
+    return isBoardDraftRecord(parsed) ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+const draftSavedLabel = (value: number | null) => {
+  if (!value) {
+    return 'No saved draft'
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date(value))
+}
 
 const buildExportNames = (name: string, stamp: string) => ({
   mapsmith: `${safeFileStem(name)}-${stamp}.mapsmith`,
@@ -902,10 +968,13 @@ function App() {
   const canvasRef = useRef<SVGSVGElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const hasDraggedRef = useRef(false)
-  const [board, setBoard] = useState<Board>(() => normalizeBoard(createDemoBoard()))
+  const initialDraft = useMemo(() => loadBoardDraft(), [])
+  const [board, setBoard] = useState<Board>(
+    () => normalizeBoard(initialDraft?.board ?? createDemoBoard()),
+  )
   const [view, setView] = useState<View>(initialView)
   const [tool, setTool] = useState<Tool>('select')
-  const [selectedId, setSelectedId] = useState<string>('local-first')
+  const [selectedId, setSelectedId] = useState<string>(initialDraft?.board.nodes[0]?.id ?? 'local-first')
   const [selectedConnectorId, setSelectedConnectorId] = useState<string>('')
   const [connectorStartId, setConnectorStartId] = useState<string | null>(null)
   const [dragState, setDragState] = useState<DragState | null>(null)
@@ -913,8 +982,15 @@ function App() {
   const [lastChanged, setLastChanged] = useState('Not edited')
   const [canvasSize, setCanvasSize] = useState({ width: 960, height: 620 })
   const [showShortcuts, setShowShortcuts] = useState(false)
-  const [boardTitleDraft, setBoardTitleDraft] = useState(boardName)
+  const [boardTitleDraft, setBoardTitleDraft] = useState(initialDraft?.board.name ?? boardName)
   const [templateId, setTemplateId] = useState<TemplateId>('flowchart')
+  const [autosaveState, setAutosaveState] = useState<AutosaveState>(() => ({
+    hasDraft: Boolean(initialDraft),
+    savedAt: initialDraft?.savedAt ?? null,
+    error: '',
+  }))
+  const autosaveInitializedRef = useRef(false)
+  const autosaveTimerRef = useRef<number | null>(null)
 
   const selectedNode = useMemo(
     () => board.nodes.find((node) => node.id === selectedId) ?? null,
@@ -993,6 +1069,100 @@ function App() {
       setStatus(`Could not copy ${label} filename`)
     }
   }, [])
+
+  const persistDraft = useCallback((nextBoard: Board) => {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return
+    }
+
+    try {
+      const draft: BoardDraftRecord = {
+        type: 'mapsmith-board-draft',
+        version: AUTOSAVE_VERSION,
+        savedAt: Date.now(),
+        board: normalizeBoard(nextBoard),
+      }
+
+      window.localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(draft))
+      setAutosaveState({ hasDraft: true, savedAt: draft.savedAt, error: '' })
+    } catch {
+      setAutosaveState((current) =>
+        current.error
+          ? current
+          : { ...current, error: 'Draft storage unavailable in this browser' },
+      )
+    }
+  }, [])
+
+  const clearDraft = useCallback(() => {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      setAutosaveState((current) =>
+        current.error
+          ? current
+          : { ...current, error: 'Draft storage unavailable in this browser' },
+      )
+      return
+    }
+
+    try {
+      window.localStorage.removeItem(AUTOSAVE_KEY)
+      setAutosaveState({ hasDraft: false, savedAt: null, error: '' })
+      setStatus('Draft cleared')
+      setLastChanged(nowLabel())
+    } catch {
+      setAutosaveState((current) =>
+        current.error
+          ? current
+          : { ...current, error: 'Failed to clear local draft' },
+      )
+    }
+  }, [])
+
+  const recoverDraft = useCallback(() => {
+    const draft = loadBoardDraft()
+    if (!draft) {
+      setAutosaveState((current) => ({
+        ...current,
+        hasDraft: false,
+        savedAt: null,
+      }))
+      setStatus('No local draft to recover')
+      return
+    }
+
+    const nextBoard = normalizeBoard(draft.board)
+    setBoard(nextBoard)
+    setBoardTitleDraft(nextBoard.name)
+    setSelectedId(nextBoard.nodes[0]?.id ?? '')
+    setSelectedConnectorId('')
+    setConnectorStartId(null)
+    setStatus('Draft recovered')
+    setLastChanged(nowLabel())
+    setAutosaveState({ hasDraft: true, savedAt: draft.savedAt, error: '' })
+    setView(initialView)
+  }, [])
+
+  useEffect(() => {
+    if (!autosaveInitializedRef.current) {
+      autosaveInitializedRef.current = true
+      return
+    }
+
+    if (autosaveTimerRef.current) {
+      window.clearTimeout(autosaveTimerRef.current)
+    }
+
+    autosaveTimerRef.current = window.setTimeout(() => {
+      persistDraft(board)
+    }, 500)
+
+    return () => {
+      if (autosaveTimerRef.current) {
+        window.clearTimeout(autosaveTimerRef.current)
+        autosaveTimerRef.current = null
+      }
+    }
+  }, [board, persistDraft])
 
   const applyTemplate = useCallback(
     (nextTemplateId: TemplateId) => {
@@ -1595,6 +1765,35 @@ function App() {
               <dd>{status}</dd>
             </div>
           </dl>
+
+          <section className="autosave-panel" aria-label="Local draft recovery">
+            <h3>Local draft</h3>
+            <p>
+              {autosaveState.hasDraft
+                ? `Saved draft: ${draftSavedLabel(autosaveState.savedAt)}`
+                : 'No local draft saved yet'}
+            </p>
+            <div className="autosave-actions">
+              <button
+                className="template-load autosave-button"
+                type="button"
+                onClick={recoverDraft}
+                disabled={!autosaveState.hasDraft}
+              >
+                <History size={16} />
+                <span>Recover draft</span>
+              </button>
+              <button
+                className="autosave-button autosave-button-secondary"
+                type="button"
+                onClick={clearDraft}
+                disabled={!autosaveState.hasDraft}
+              >
+                Clear draft
+              </button>
+            </div>
+            {autosaveState.error ? <p className="autosave-warning">{autosaveState.error}</p> : null}
+          </section>
 
           <section className="template-panel" aria-label="Starter templates">
             <h3>Starter Templates</h3>

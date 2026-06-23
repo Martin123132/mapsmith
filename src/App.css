@@ -211,6 +211,7 @@
   font-weight: 800;
 }
 
+.autosave-panel,
 .template-panel {
   display: grid;
   gap: 8px;
@@ -221,7 +222,8 @@
   background: var(--panel-2);
 }
 
-.template-panel h3 {
+.template-panel h3,
+.autosave-panel h3 {
   margin: 0 0 2px;
   color: #182230;
   font-size: 13px;
@@ -259,6 +261,67 @@
   color: #475467;
   font-size: 12px;
   line-height: 1.25;
+}
+
+.autosave-panel {
+  gap: 9px;
+  padding-top: 10px;
+}
+
+.autosave-actions {
+  display: grid;
+  gap: 6px;
+}
+
+.autosave-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+}
+
+.autosave-button {
+  height: 34px;
+  border: 1px solid #ff6b35;
+  border-radius: 8px;
+  color: #9f391e;
+  background: #fff0ea;
+  cursor: pointer;
+  font: 800 12px/1 var(--ui-font);
+}
+
+.autosave-button-secondary {
+  border-color: #cfd6e2;
+  color: #182230;
+  background: #fff;
+}
+
+.autosave-button:hover {
+  background: #ffe2d5;
+}
+
+.autosave-button-secondary:hover {
+  background: #f8fafc;
+}
+
+.autosave-button[disabled],
+.autosave-button-secondary[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.autosave-button:focus-visible,
+.autosave-button-secondary:focus-visible {
+  outline: 3px solid rgba(255, 107, 53, 0.3);
+  outline-offset: 2px;
+}
+
+.autosave-warning {
+  margin: 0;
+  color: #b54708;
+  font-size: 11px;
+  line-height: 1.2;
 }
 
 .template-load {

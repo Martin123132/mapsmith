@@ -12,6 +12,7 @@ Mapsmith is early, but the direction is simple: a fast, local-first diagram edit
 - Keep legacy `.canvasforge` imports working.
 - Maintain green CI for lint and production builds.
 - Add in-app starter templates (blank, flowchart, system, process).
+- Add local browser auto-save and explicit draft recovery controls.
 
 ## Next
 
@@ -23,7 +24,6 @@ Mapsmith is early, but the direction is simple: a fast, local-first diagram edit
 ## Later
 
 - Multi-page boards.
-- Optional browser storage autosave.
 - Themeable export styles.
 - Share-safe static viewer export.
 - Self-hosted collaboration experiments.
