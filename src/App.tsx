@@ -802,6 +802,18 @@ const choosePortToward = (from: DiagramNode, to: DiagramNode): PortName => {
   return dy >= 0 ? 'south' : 'north'
 }
 
+const choosePortTowardPoint = (from: DiagramNode, point: Point): PortName => {
+  const fromCenter = centerOf(from)
+  const dx = point.x - fromCenter.x
+  const dy = point.y - fromCenter.y
+
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    return dx >= 0 ? 'east' : 'west'
+  }
+
+  return dy >= 0 ? 'south' : 'north'
+}
+
 const oppositePort = (port: PortName): PortName => {
   if (port === 'north') {
     return 'south'
@@ -1016,6 +1028,7 @@ function App() {
   const [selectedId, setSelectedId] = useState<string>(initialDraft?.board.nodes[0]?.id ?? 'local-first')
   const [selectedConnectorId, setSelectedConnectorId] = useState<string>('')
   const [connectorStartId, setConnectorStartId] = useState<string | null>(null)
+  const [connectorPreviewPoint, setConnectorPreviewPoint] = useState<Point | null>(null)
   const [dragState, setDragState] = useState<DragState | null>(null)
   const [status, setStatus] = useState('Ready')
   const [lastChanged, setLastChanged] = useState('Not edited')
@@ -1114,6 +1127,21 @@ function App() {
     const startNode = connectorStartId ? nodeMap.get(connectorStartId) : null
     return startNode ? `Target from ${startNode.text}` : 'Pick source node'
   }, [connectorStartId, nodeMap, tool])
+  const connectorPreview = useMemo(() => {
+    if (tool !== 'connector' || !connectorStartId || !connectorPreviewPoint) {
+      return null
+    }
+
+    const from = nodeMap.get(connectorStartId)
+    if (!from) {
+      return null
+    }
+
+    return {
+      start: getPortPoint(from, choosePortTowardPoint(from, connectorPreviewPoint)),
+      end: connectorPreviewPoint,
+    }
+  }, [connectorPreviewPoint, connectorStartId, nodeMap, tool])
   const selectedConnectorEndpoints = useMemo(() => {
     if (!selectedConnector) {
       return null
@@ -1717,6 +1745,7 @@ function App() {
       if (tool === 'connector') {
         if (!connectorStartId) {
           setConnectorStartId(node.id)
+          setConnectorPreviewPoint(centerOf(node))
           setSelectedId(node.id)
           setSelectedConnectorId('')
           setStatus('Pick target node')
@@ -1740,6 +1769,7 @@ function App() {
           setSelectedId(node.id)
           setSelectedConnectorId('')
           setConnectorStartId(null)
+          setConnectorPreviewPoint(null)
           setTool('select')
           return
         }
@@ -1808,6 +1838,9 @@ function App() {
   const handlePointerMove = useCallback(
     (event: ReactPointerEvent<SVGSVGElement>) => {
       if (!dragState) {
+        if (tool === 'connector' && connectorStartId) {
+          setConnectorPreviewPoint(screenToWorld(event.clientX, event.clientY))
+        }
         return
       }
 
@@ -1875,7 +1908,7 @@ function App() {
       setLastChanged(nowLabel())
       setStatus('Moving node')
     },
-    [dragState, screenToWorld, syncUnsavedState],
+    [connectorStartId, dragState, screenToWorld, syncUnsavedState, tool],
   )
 
   const handlePointerUp = useCallback(() => {
@@ -1899,7 +1932,7 @@ function App() {
       nextNames.mapsmith,
     )
     setSavedBoardCheckpoint(normalized)
-    setStatus('Board file prepared')
+    setStatus(`Board file prepared: ${nextNames.mapsmith}`)
   }, [board, setSavedBoardCheckpoint])
 
   const openBoard = useCallback(() => {
@@ -1989,7 +2022,7 @@ function App() {
     }
 
     downloadBlob(blob, nextNames.png)
-    setStatus('PNG export prepared')
+    setStatus(`PNG export prepared: ${nextNames.png}`)
   }, [board])
 
   const exportSvg = useCallback(() => {
@@ -2005,7 +2038,7 @@ function App() {
       new Blob([createSvgExport(board)], { type: 'image/svg+xml;charset=utf-8' }),
       nextNames.svg,
     )
-    setStatus('SVG export prepared')
+    setStatus(`SVG export prepared: ${nextNames.svg}`)
   }, [board])
 
   const handleCanvasKeyDown = useCallback(
@@ -2551,6 +2584,7 @@ function App() {
                 onClick={() => {
                   setTool(nextTool)
                   setConnectorStartId(null)
+                  setConnectorPreviewPoint(null)
                 }}
               >
                 <Icon size={17} />
@@ -2671,6 +2705,25 @@ function App() {
                 )
               })}
             </g>
+
+            {connectorPreview ? (
+              <g className="connector-preview" aria-hidden="true">
+                <line
+                  className="connector-preview-line"
+                  markerEnd="url(#arrowhead)"
+                  x1={connectorPreview.start.x}
+                  x2={connectorPreview.end.x}
+                  y1={connectorPreview.start.y}
+                  y2={connectorPreview.end.y}
+                />
+                <circle
+                  className="connector-preview-end"
+                  cx={connectorPreview.end.x}
+                  cy={connectorPreview.end.y}
+                  r="5"
+                />
+              </g>
+            ) : null}
 
             <g className="nodes">
               {board.nodes.map((node) => (

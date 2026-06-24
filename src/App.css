@@ -498,6 +498,25 @@
   pointer-events: none;
 }
 
+.connector-preview {
+  color: #ff6b35;
+  opacity: 0.84;
+  pointer-events: none;
+}
+
+.connector-preview-line {
+  stroke: currentColor;
+  stroke-dasharray: 10 7;
+  stroke-linecap: round;
+  stroke-width: 3;
+}
+
+.connector-preview-end {
+  fill: #ffffff;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
 .diagram-node {
   cursor: move;
 }
