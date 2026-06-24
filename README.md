@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Martin123132/mapsmith/actions/workflows/ci.yml/badge.svg)](https://github.com/Martin123132/mapsmith/actions/workflows/ci.yml)
 
-Mapsmith is a local-first, open-source diagram editor for fast visual maps, whiteboards, and flow sketches. It runs in the browser, keeps boards in local files, and exports native SVG-based work without a subscription gate.
+Mapsmith is a local-first, source-available diagram editor for fast visual maps, whiteboards, and flow sketches. It runs in the browser, keeps boards in local files, and exports native SVG-based work without a subscription gate.
 
 ![Mapsmith editor showing a native SVG board with shapes and connectors](docs/screenshots/mapsmith-editor.png)
 
@@ -13,7 +13,7 @@ Mapsmith is a local-first, open-source diagram editor for fast visual maps, whit
 - Practical exports: save board JSON and export PNG or SVG snapshots with
   timestamped, board-aware filenames.
 - No account requirement: the core editor is designed to work without cloud lock-in.
-- Open-source posture: AGPL-3.0-only, with a public roadmap and visible CI.
+- Source-available posture: personal and non-commercial use under PolyForm Noncommercial, with commercial use requiring a separate company licence.
 
 ## Current MVP
 
@@ -86,7 +86,7 @@ For a production-like local smoke after `npm run build`:
 npm run preview -- --host 127.0.0.1
 ```
 
-Rendered browser QA guidance lives in [docs/RENDERED_QA.md](docs/RENDERED_QA.md).
+Rendered browser QA guidance lives in [docs/RENDERED_QA.md](docs/RENDERED_QA.md). Contributor architecture notes live in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Mobile Smoke
 
@@ -96,6 +96,6 @@ The editor is designed around desktop creation, but the shell should remain read
 
 ## License
 
-Mapsmith is licensed under [AGPL-3.0-only](LICENSE).
+Mapsmith is source-available under the [PolyForm Noncommercial License 1.0.0](LICENSE) for personal and non-commercial use. Commercial use requires a separate written license from TWO HANDS NETWORK LTD; see [COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md) and [NOTICE.md](NOTICE.md).
 
 Future release preparation is tracked in [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md).

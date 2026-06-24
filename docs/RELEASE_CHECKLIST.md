@@ -10,6 +10,7 @@ Record dry-run outcomes with [RELEASE_DRY_RUN_EVIDENCE.md](RELEASE_DRY_RUN_EVIDE
 - [ ] No private diagrams, credentials, customer data, internal URLs, or machine-specific paths are included.
 - [ ] Screenshots and fixtures use sanitized demo content only.
 - [ ] README and ROADMAP still describe the released behavior accurately.
+- [ ] LICENSE, NOTICE.md, and COMMERCIAL-LICENSE.md still describe personal/non-commercial PolyForm use and require a separate written commercial license from TWO HANDS NETWORK LTD.
 - [ ] `package.json` remains `private: true` until an explicit package publishing decision is made.
 - [ ] No public release, package publish, or asset upload has happened before this review is complete.
 

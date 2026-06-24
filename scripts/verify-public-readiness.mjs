@@ -16,6 +16,10 @@ const files = {
   readme: await read('README.md'),
   contributing: await read('CONTRIBUTING.md'),
   security: await read('SECURITY.md'),
+  license: await read('LICENSE'),
+  commercialLicense: await read('COMMERCIAL-LICENSE.md'),
+  notice: await read('NOTICE.md'),
+  architecture: await read('docs/ARCHITECTURE.md'),
   releaseChecklist: await read('docs/RELEASE_CHECKLIST.md'),
   releaseDryRun: await read('docs/RELEASE_DRY_RUN_EVIDENCE.md'),
   renderedQa: await read('docs/RENDERED_QA.md'),
@@ -31,8 +35,8 @@ const files = {
 
 const packageData = JSON.parse(files.packageJson)
 
-if (packageData.license !== 'AGPL-3.0-only') {
-  failures.push('package.json must keep AGPL-3.0-only license')
+if (packageData.license !== 'SEE LICENSE IN LICENSE') {
+  failures.push('package.json must point to the repository LICENSE file')
 }
 
 if (packageData.private !== true) {
@@ -50,10 +54,58 @@ requireIncludes('README.md', files.readme, [
   '[examples/](examples/)',
   '[open/export/save walkthrough](examples/WALKTHROUGH.md)',
   '[docs/RENDERED_QA.md](docs/RENDERED_QA.md)',
+  '[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)',
+  '[COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md)',
+  '[NOTICE.md](NOTICE.md)',
   'npm run verify:examples',
-  'AGPL-3.0-only',
+  'source-available',
+  'PolyForm Noncommercial License 1.0.0',
+  'Commercial use requires a separate written license',
+  'TWO HANDS NETWORK LTD',
   'local-first',
   'npm run verify:import-smoke',
+])
+
+requireIncludes('LICENSE', files.license, [
+  'PolyForm Noncommercial License 1.0.0',
+  'Required Notice: Copyright (c) 2026 TWO HANDS NETWORK LTD.',
+  'personal and non-commercial use',
+  'commercial AI coding/agent products',
+  'Any noncommercial purpose is a permitted purpose.',
+])
+
+requireIncludes('COMMERCIAL-LICENSE.md', files.commercialLicense, [
+  'Commercial Licensing',
+  'PolyForm Noncommercial License 1.0.0',
+  'TWO HANDS NETWORK LTD',
+  'Contact the COO',
+  'commercial AI system',
+  'No commercial license is granted unless agreed in writing',
+])
+
+requireIncludes('NOTICE.md', files.notice, [
+  'mapsmith Notice',
+  'source-available software, not open-source software',
+  'TWO HANDS NETWORK LTD',
+  'PolyForm Noncommercial License 1.0.0',
+  'non-commercial use',
+  'Commercial use requires a separate written license',
+])
+
+requireIncludes('docs/ARCHITECTURE.md', files.architecture, [
+  'Mapsmith Architecture',
+  'source-available for personal and non-commercial use',
+  'PolyForm Noncommercial License 1.0.0',
+  'TWO HANDS NETWORK LTD',
+  'src/App.tsx',
+  'src/boardFile.ts',
+  'src/svgExport.ts',
+  'Board Model',
+  'Editor State',
+  'Canvas Interactions',
+  'Local Persistence',
+  'npm run check',
+  'RENDERED_QA.md',
 ])
 
 requireIncludes('CONTRIBUTING.md', files.contributing, [
@@ -82,6 +134,8 @@ requireIncludes('docs/RELEASE_CHECKLIST.md', files.releaseChecklist, [
   'npm audit --omit=dev',
   'GitHub CI URL is recorded in the dry-run evidence.',
   'Rendered smoke from [RENDERED_QA.md](RENDERED_QA.md)',
+  'LICENSE, NOTICE.md, and COMMERCIAL-LICENSE.md',
+  'TWO HANDS NETWORK LTD',
   'package.json` remains `private: true',
   'No public release, package publish, or asset upload',
   'examples/portable-flow.mapsmith',

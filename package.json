@@ -2,8 +2,8 @@
   "name": "mapsmith",
   "private": true,
   "version": "0.0.0",
-  "description": "Local-first open-source SVG diagram editor.",
-  "license": "AGPL-3.0-only",
+  "description": "Local-first source-available SVG diagram editor.",
+  "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "scripts": {
     "dev": "vite",

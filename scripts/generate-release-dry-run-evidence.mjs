@@ -31,7 +31,7 @@ This is a dry-run evidence document only. It does not create a public release, u
   - Notes: Confirms the demo-safe portable board, checked open/export/save walkthrough, and SVG/export proof stay valid.
 - [ ] \`npm run verify:public\`
   - Result: <pass/fail>
-  - Notes: Confirms public readiness docs, templates, AGPL posture, and release-readiness guardrails stay present.
+  - Notes: Confirms public readiness docs, templates, source-available personal/non-commercial licence posture, commercial licensing notes, and release-readiness guardrails stay present.
 - [ ] \`npm audit --omit=dev\`
   - Result: <pass/fail>
   - Notes: Record dependency audit result.

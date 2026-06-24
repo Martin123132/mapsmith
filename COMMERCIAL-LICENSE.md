@@ -4,6 +4,8 @@ mapsmith is available for personal and non-commercial use under the PolyForm Non
 
 Commercial use is not included in the public license. A separate written commercial license from TWO HANDS NETWORK LTD is required before using mapsmith in a paid product, hosted service, managed service, enterprise product, commercial developer tool, commercial AI system, or commercial AI training/evaluation pipeline.
 
+Contact the COO of TWO HANDS NETWORK LTD to discuss commercial licensing.
+
 Examples that require a commercial license:
 
 - adding mapsmith features to a paid coding assistant or AI agent product;
