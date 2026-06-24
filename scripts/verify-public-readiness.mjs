@@ -18,6 +18,7 @@ const files = {
   security: await read('SECURITY.md'),
   releaseChecklist: await read('docs/RELEASE_CHECKLIST.md'),
   releaseDryRun: await read('docs/RELEASE_DRY_RUN_EVIDENCE.md'),
+  renderedQa: await read('docs/RENDERED_QA.md'),
   releaseDryRunGenerator: await read('scripts/generate-release-dry-run-evidence.mjs'),
   bugIssue: await read('.github/ISSUE_TEMPLATE/bug_report.yml'),
   exportIssue: await read('.github/ISSUE_TEMPLATE/export_import_issue.yml'),
@@ -48,6 +49,7 @@ requireIncludes('README.md', files.readme, [
   '[docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md)',
   '[examples/](examples/)',
   '[open/export/save walkthrough](examples/WALKTHROUGH.md)',
+  '[docs/RENDERED_QA.md](docs/RENDERED_QA.md)',
   'npm run verify:examples',
   'AGPL-3.0-only',
   'local-first',
@@ -79,6 +81,7 @@ requireIncludes('docs/RELEASE_CHECKLIST.md', files.releaseChecklist, [
   'npm run verify:public',
   'npm audit --omit=dev',
   'GitHub CI URL is recorded in the dry-run evidence.',
+  'Rendered smoke from [RENDERED_QA.md](RENDERED_QA.md)',
   'package.json` remains `private: true',
   'No public release, package publish, or asset upload',
   'examples/portable-flow.mapsmith',
@@ -86,6 +89,18 @@ requireIncludes('docs/RELEASE_CHECKLIST.md', files.releaseChecklist, [
   'CI is green on `main`',
   'release readiness issue template',
   'Release notes do not mention private branches',
+])
+
+requireIncludes('docs/RENDERED_QA.md', files.renderedQa, [
+  'Rendered QA',
+  'app loads -> first meaningful editor screen renders -> primary visible controls respond without runtime errors',
+  'D:\\Codex\\revenge-tour\\mapsmith\\node_modules\\.tmp\\rendered-qa',
+  'Desktop Smoke',
+  'Mobile Smoke',
+  'Keys',
+  '390 x 760',
+  'no relevant errors or warnings',
+  'side panels scroll inside the workspace row',
 ])
 
 requireIncludes('docs/RELEASE_DRY_RUN_EVIDENCE.md', files.releaseDryRun, [

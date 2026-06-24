@@ -86,6 +86,8 @@ For a production-like local smoke after `npm run build`:
 npm run preview -- --host 127.0.0.1
 ```
 
+Rendered browser QA guidance lives in [docs/RENDERED_QA.md](docs/RENDERED_QA.md).
+
 ## Mobile Smoke
 
 The editor is designed around desktop creation, but the shell should remain readable and usable on small screens.

@@ -137,8 +137,11 @@
 .side-panel {
   display: flex;
   min-width: 0;
+  min-height: 0;
   flex-direction: column;
   gap: 18px;
+  overflow: auto;
+  overscroll-behavior: contain;
   padding: 18px;
   border-color: var(--line);
   background: rgba(255, 255, 255, 0.82);
