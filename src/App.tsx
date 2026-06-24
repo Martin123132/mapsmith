@@ -1102,17 +1102,18 @@ function App() {
 
     return ''
   }, [selectedConnector, selectedIndex, selectedNode, selectableItems.length])
+  const nodeMap = useMemo(
+    () => new Map(board.nodes.map((node) => [node.id, node])),
+    [board.nodes],
+  )
   const connectorModeStatus = useMemo(() => {
     if (tool !== 'connector') {
       return ''
     }
 
-    return connectorStartId ? `Connector target: ${connectorStartId}` : 'Connector source'
-  }, [connectorStartId, tool])
-  const nodeMap = useMemo(
-    () => new Map(board.nodes.map((node) => [node.id, node])),
-    [board.nodes],
-  )
+    const startNode = connectorStartId ? nodeMap.get(connectorStartId) : null
+    return startNode ? `Target from ${startNode.text}` : 'Pick source node'
+  }, [connectorStartId, nodeMap, tool])
   const selectedConnectorEndpoints = useMemo(() => {
     if (!selectedConnector) {
       return null
@@ -2678,6 +2679,7 @@ function App() {
                   isConnectorStart={connectorStartId === node.id}
                   isSelected={selectedId === node.id}
                   node={node}
+                  showConnectorPorts={tool === 'connector'}
                   onPointerDown={handleNodePointerDown}
                   onResizePointerDown={handleResizePointerDown}
                   onSelect={setSelectedId}
@@ -2970,6 +2972,7 @@ function DiagramNodeView({
   isConnectorStart,
   isSelected,
   node,
+  showConnectorPorts,
   onPointerDown,
   onResizePointerDown,
   onSelect,
@@ -2977,6 +2980,7 @@ function DiagramNodeView({
   isConnectorStart: boolean
   isSelected: boolean
   node: DiagramNode
+  showConnectorPorts: boolean
   onPointerDown: (event: ReactPointerEvent<SVGGElement>, node: DiagramNode) => void
   onResizePointerDown: (
     event: ReactPointerEvent<SVGCircleElement>,
@@ -3073,6 +3077,22 @@ function DiagramNodeView({
           </tspan>
         ))}
       </text>
+      {showConnectorPorts
+        ? portNames.map((port) => {
+            const point = getPortPoint(node, port)
+            return (
+              <circle
+                key={`${node.id}-connector-port-${port}`}
+                className={`connector-target-port ${isConnectorStart ? 'source' : ''}`}
+                cx={point.x}
+                cy={point.y}
+                data-connector-port={port}
+                data-connector-source={isConnectorStart ? 'true' : undefined}
+                r="5"
+              />
+            )
+          })
+        : null}
       {isSelected
         ? handles.map(({ handle, point }) => (
             <circle

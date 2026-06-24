@@ -535,6 +535,21 @@
   stroke-width: 3;
 }
 
+.connector-target-port {
+  fill: #ffffff;
+  stroke: #26547c;
+  stroke-width: 2;
+  filter: drop-shadow(0 2px 5px rgba(15, 23, 42, 0.18));
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.connector-target-port.source {
+  fill: #fff0ea;
+  stroke: #ff6b35;
+  stroke-width: 2.5;
+}
+
 .resize-handle {
   fill: #ffffff;
   stroke: #ff6b35;
