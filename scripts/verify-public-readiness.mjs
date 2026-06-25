@@ -72,6 +72,8 @@ requireIncludes('LICENSE', files.license, [
   'personal and non-commercial use',
   'commercial AI coding/agent products',
   'Any noncommercial purpose is a permitted purpose.',
+  'Contact us',
+  'Glyn : glyn@twohandsnetwork.co.uk',
 ])
 
 requireIncludes('COMMERCIAL-LICENSE.md', files.commercialLicense, [
