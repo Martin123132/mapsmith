@@ -30,6 +30,7 @@ Mapsmith currently includes:
 - Connector port editing, visible attachment hints, and optional connector labels
 - Local draft auto-save with one-click recovery and clear controls
 - Starter templates for blank, flowchart, system map, and process map
+- In-app licence and commercial-contact panel matching the repository licence posture
 - Responsive editor layout for desktop and small screens
 
 ![Mapsmith keyboard shortcut overlay](docs/screenshots/mapsmith-shortcuts.png)

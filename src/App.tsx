@@ -5,6 +5,7 @@ import {
   FileInput,
   FolderOpen,
   ImageDown,
+  Info,
   Keyboard,
   History,
   MousePointer2,
@@ -46,6 +47,14 @@ import {
 const boardName = 'Mapsmith demo board'
 const AUTOSAVE_KEY = 'mapsmith-board-draft-v1'
 const AUTOSAVE_VERSION = 1
+const DOWNLOAD_QA_ATTRIBUTE = 'data-mapsmith-download-qa-records'
+const DOWNLOAD_QA_STORAGE_KEY = 'mapsmith-download-qa-records'
+const projectLinks = {
+  commercialLicense: 'https://github.com/Martin123132/mapsmith/blob/main/COMMERCIAL-LICENSE.md',
+  contactEmail: 'glyn@twohandsnetwork.co.uk',
+  license: 'https://github.com/Martin123132/mapsmith/blob/main/LICENSE',
+  notice: 'https://github.com/Martin123132/mapsmith/blob/main/NOTICE.md',
+} as const
 
 type Tool = 'select' | 'pan' | ShapeKind | 'connector'
 
@@ -79,6 +88,12 @@ type DragState =
 type Point = {
   x: number
   y: number
+}
+
+type DownloadQaRecord = {
+  filename: string
+  size: number
+  type: string
 }
 
 type ResizeHandle = 'nw' | 'ne' | 'se' | 'sw'
@@ -965,7 +980,31 @@ const wrapLines = (text: string, maxChars = 22) => {
   return lines.length > 0 ? lines : ['']
 }
 
+const shouldCaptureDownloadForQa = () =>
+  import.meta.env.DEV &&
+  typeof window !== 'undefined' &&
+  new URLSearchParams(window.location.search).has('qa-downloads')
+
+const recordDownloadForQa = (blob: Blob, filename: string) => {
+  try {
+    const raw = window.sessionStorage.getItem(DOWNLOAD_QA_STORAGE_KEY)
+    const parsed: unknown = raw ? JSON.parse(raw) : []
+    const previous: DownloadQaRecord[] = Array.isArray(parsed) ? parsed : []
+    const record = { filename, size: blob.size, type: blob.type }
+    const records = JSON.stringify([...previous, record].slice(-12))
+    window.sessionStorage.setItem(DOWNLOAD_QA_STORAGE_KEY, records)
+    document.documentElement.setAttribute(DOWNLOAD_QA_ATTRIBUTE, records)
+  } catch {
+    // QA capture must never block normal download behavior.
+  }
+}
+
 const downloadBlob = (blob: Blob, filename: string) => {
+  if (shouldCaptureDownloadForQa()) {
+    recordDownloadForQa(blob, filename)
+    return
+  }
+
   const url = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
   anchor.href = url
@@ -3001,11 +3040,44 @@ function App() {
               </div>
             </dl>
           </section>
+          <section className="licence-panel" aria-label="Licence and contact">
+            <div className="licence-panel-heading">
+              <Info size={16} />
+              <h3>Licence</h3>
+            </div>
+            <p>
+              Source-available for personal and non-commercial use under PolyForm
+              Noncommercial 1.0.0.
+            </p>
+            <dl className="licence-list">
+              <div>
+                <dt>Commercial use</dt>
+                <dd>Requires a separate written license from TWO HANDS NETWORK LTD.</dd>
+              </div>
+              <div>
+                <dt>Contact</dt>
+                <dd>
+                  <a href={`mailto:${projectLinks.contactEmail}`}>{projectLinks.contactEmail}</a>
+                </dd>
+              </div>
+            </dl>
+            <div className="licence-links" aria-label="Licence links">
+              <a href={projectLinks.license} rel="noreferrer" target="_blank">
+                License
+              </a>
+              <a href={projectLinks.notice} rel="noreferrer" target="_blank">
+                Notice
+              </a>
+              <a href={projectLinks.commercialLicense} rel="noreferrer" target="_blank">
+                Commercial
+              </a>
+            </div>
+          </section>
         </aside>
       </section>
 
       <footer className="statusbar">
-        <span>github.com/Martin123132/mapsmith</span>
+        <span>Personal/non-commercial use. Commercial license: TWO HANDS NETWORK LTD</span>
         <span>{shortcutHint}</span>
         <span>{status}</span>
       </footer>

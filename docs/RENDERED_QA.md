@@ -25,6 +25,7 @@ app loads -> first meaningful editor screen renders -> primary visible controls 
 5. Confirm browser console has no relevant errors or warnings.
 6. Confirm side panels scroll inside the workspace row and do not run under the status bar.
 7. Open the `Keys` panel and confirm the shortcut panel appears and the button is pressed.
+8. For non-writing export checks, open `http://127.0.0.1:5173/?qa-downloads`, click `Save`, `SVG`, and `PNG`, then verify `data-mapsmith-download-qa-records` contains `.mapsmith`, `.svg`, and `.png` records with non-zero sizes. This dev-only path records metadata and skips real browser downloads.
 
 ## Mobile Smoke
 
@@ -59,4 +60,5 @@ The latest rendered QA pass checked:
 - no console errors or warnings,
 - fixed scroll containment for the left sidebar,
 - `Keys` shortcut panel interaction,
+- non-writing `?qa-downloads` save/SVG/PNG metadata capture,
 - mobile `390 x 760` collapsed layout with no horizontal overflow.

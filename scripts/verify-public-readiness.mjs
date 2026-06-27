@@ -31,6 +31,7 @@ const files = {
   pullRequest: await read('.github/PULL_REQUEST_TEMPLATE.md'),
   ci: await read('.github/workflows/ci.yml'),
   packageJson: await read('package.json'),
+  app: await read('src/App.tsx'),
 }
 
 const packageData = JSON.parse(files.packageJson)
@@ -110,6 +111,19 @@ requireIncludes('docs/ARCHITECTURE.md', files.architecture, [
   'RENDERED_QA.md',
 ])
 
+requireIncludes('src/App.tsx', files.app, [
+  'Licence and contact',
+  'DOWNLOAD_QA_ATTRIBUTE',
+  'DOWNLOAD_QA_STORAGE_KEY',
+  'qa-downloads',
+  'PolyForm',
+  'TWO HANDS NETWORK LTD',
+  'glyn@twohandsnetwork.co.uk',
+  'COMMERCIAL-LICENSE.md',
+  'NOTICE.md',
+  'Personal/non-commercial use. Commercial license: TWO HANDS NETWORK LTD',
+])
+
 requireIncludes('CONTRIBUTING.md', files.contributing, [
   'public-safe',
   'Do not commit private diagrams',
@@ -151,6 +165,9 @@ requireIncludes('docs/RENDERED_QA.md', files.renderedQa, [
   'Rendered QA',
   'app loads -> first meaningful editor screen renders -> primary visible controls respond without runtime errors',
   'D:\\Codex\\revenge-tour\\mapsmith\\node_modules\\.tmp\\rendered-qa',
+  '?qa-downloads',
+  'data-mapsmith-download-qa-records',
+  'mapsmith-download-qa-records',
   'Desktop Smoke',
   'Mobile Smoke',
   'Keys',
