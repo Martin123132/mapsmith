@@ -6,6 +6,7 @@ Mapsmith is a local-first React/Vite diagram editor. The app is source-available
 
 - `src/App.tsx`: editor state, toolbar commands, canvas interactions, autosave, import/open, save, PNG/SVG export, and keyboard shortcuts.
 - `src/boardFile.ts`: board schema, board-file serialization, legacy raw-board import support, and validation guards.
+- `src/connectorRouting.ts`: shared orthogonal connector routing and label-point helpers used by the editor and SVG export.
 - `src/svgExport.ts`: deterministic SVG export renderer used by browser export and verification scripts.
 - `src/connectorLabelShortcuts.ts`: pure helpers for connector label visibility and keyboard nudging.
 - `src/App.css`: responsive app shell, canvas, side panels, inspectors, shortcut panel, and connector affordances.
@@ -52,6 +53,7 @@ The native SVG canvas handles:
 - resize handles,
 - panning and zooming,
 - connector creation,
+- orthogonal routed connector paths,
 - visible connector port hints,
 - live dashed connector preview,
 - selected connector port reassignment and label controls.

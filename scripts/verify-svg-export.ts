@@ -71,6 +71,8 @@ const mustContain = [
   'Subscription tax',
   'Local-first &lt;editor&gt; &amp; &quot;SVG&quot;',
   'Export-ready boards',
+  '<path class="connector-line"',
+  'd="M 220 105 L 252 105',
   'marker-end="url(#mapsmith-arrowhead)"',
   'class="export-background"',
 ]
@@ -83,6 +85,7 @@ const mustNotContain = [
   'selection-halo',
   'resize-handle',
   'connector-port',
+  '<line class="connector-line"',
   'D:\\',
   'C:\\',
 ]

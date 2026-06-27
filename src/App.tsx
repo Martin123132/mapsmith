@@ -36,6 +36,7 @@ import {
   serializeBoardFile,
 } from './boardFile'
 import type { Board, Connector, DiagramNode, PortName, ShapeKind } from './boardFile'
+import { createConnectorPath, getConnectorLabelPoint } from './connectorRouting.js'
 import { createSvgExport } from './svgExport'
 import {
   isConnectorLabelVisible,
@@ -760,50 +761,6 @@ const getHandlePoints = (node: DiagramNode): Array<{ handle: ResizeHandle; point
   { handle: 'sw', point: { x: node.x, y: node.y + node.height } },
 ]
 
-const getConnectionPoint = (node: DiagramNode, target: Point): Point => {
-  const center = centerOf(node)
-  const dx = target.x - center.x
-  const dy = target.y - center.y
-
-  if (node.kind === 'ellipse') {
-    const rx = node.width / 2
-    const ry = node.height / 2
-    const scale = Math.sqrt((dx * dx) / (rx * rx) + (dy * dy) / (ry * ry)) || 1
-    return {
-      x: center.x + dx / scale,
-      y: center.y + dy / scale,
-    }
-  }
-
-  if (node.kind === 'diamond') {
-    const halfWidth = node.width / 2
-    const halfHeight = node.height / 2
-    const scale = Math.abs(dx) / halfWidth + Math.abs(dy) / halfHeight || 1
-    return {
-      x: center.x + dx / scale,
-      y: center.y + dy / scale,
-    }
-  }
-
-  const halfWidth = node.width / 2
-  const halfHeight = node.height / 2
-  const scale = Math.max(Math.abs(dx) / halfWidth, Math.abs(dy) / halfHeight) || 1
-  return {
-    x: center.x + dx / scale,
-    y: center.y + dy / scale,
-  }
-}
-
-const getConnectorEndpoints = (from: DiagramNode, to: DiagramNode) => {
-  const fromCenter = centerOf(from)
-  const toCenter = centerOf(to)
-
-  return {
-    start: getConnectionPoint(from, toCenter),
-    end: getConnectionPoint(to, fromCenter),
-  }
-}
-
 const choosePortToward = (from: DiagramNode, to: DiagramNode): PortName => {
   const fromCenter = centerOf(from)
   const toCenter = centerOf(to)
@@ -866,14 +823,15 @@ const getPersistentConnectorEndpoints = (
   from: DiagramNode,
   to: DiagramNode,
 ) => {
-  if (connector.fromPort && connector.toPort) {
-    return {
-      start: getPortPoint(from, connector.fromPort),
-      end: getPortPoint(to, connector.toPort),
-    }
-  }
+  const fromPort = connector.fromPort ?? choosePortToward(from, to)
+  const toPort = connector.toPort ?? oppositePort(fromPort)
 
-  return getConnectorEndpoints(from, to)
+  return {
+    end: getPortPoint(to, toPort),
+    fromPort,
+    start: getPortPoint(from, fromPort),
+    toPort,
+  }
 }
 
 const normalizeBoard = (board: Board): Board => {
@@ -1176,9 +1134,13 @@ function App() {
       return null
     }
 
+    const fromPort = choosePortTowardPoint(from, connectorPreviewPoint)
+
     return {
-      start: getPortPoint(from, choosePortTowardPoint(from, connectorPreviewPoint)),
       end: connectorPreviewPoint,
+      fromPort,
+      start: getPortPoint(from, fromPort),
+      toPort: oppositePort(fromPort),
     }
   }, [connectorPreviewPoint, connectorStartId, nodeMap, tool])
   const selectedConnectorEndpoints = useMemo(() => {
@@ -2684,7 +2646,13 @@ function App() {
 
                 const normalizedConnector = assignPorts(connector, nodeMap)
                 const isSelectedConnector = selectedConnectorId === connector.id
-                const { start, end } = getPersistentConnectorEndpoints(normalizedConnector, from, to)
+                const { start, end, fromPort, toPort } = getPersistentConnectorEndpoints(
+                  normalizedConnector,
+                  from,
+                  to,
+                )
+                const connectorPath = createConnectorPath(start, end, fromPort, toPort)
+                const labelPoint = getConnectorLabelPoint(start, end, fromPort, toPort)
                 return (
                   <g
                     key={connector.id}
@@ -2692,43 +2660,40 @@ function App() {
                     onPointerDown={(event) => handleConnectorPointerDown(event, normalizedConnector)}
                   >
                     {isSelectedConnector ? (
-                      <line
+                      <path
+                        d={connectorPath}
                         className="connector-selection-ring"
+                        fill="none"
                         stroke={connector.stroke}
                         strokeLinecap="round"
+                        strokeLinejoin="round"
                         strokeWidth="10"
-                        x1={start.x}
-                        x2={end.x}
-                        y1={start.y}
-                        y2={end.y}
                       />
                     ) : null}
-                    <line
+                    <path
+                      d={connectorPath}
                       className="connector-hit"
+                      fill="none"
                       stroke="transparent"
                       strokeLinecap="round"
+                      strokeLinejoin="round"
                       strokeWidth="18"
-                      x1={start.x}
-                      x2={end.x}
-                      y1={start.y}
-                      y2={end.y}
                     />
-                    <line
+                    <path
+                      d={connectorPath}
                       className="connector-line"
+                      fill="none"
                       markerEnd="url(#arrowhead)"
                       stroke={connector.stroke}
                       strokeLinecap="round"
+                      strokeLinejoin="round"
                       strokeWidth="3"
-                      x1={start.x}
-                      x2={end.x}
-                      y1={start.y}
-                      y2={end.y}
                     />
                     {connector.label && connector.showLabel !== false ? (
                       <text
                         className="connector-label"
-                        x={(start.x + end.x) / 2 + (connector.labelOffsetX ?? 0)}
-                        y={(start.y + end.y) / 2 + (connector.labelOffsetY ?? 0)}
+                        x={labelPoint.x + (connector.labelOffsetX ?? 0)}
+                        y={labelPoint.y + (connector.labelOffsetY ?? 0)}
                         textAnchor="middle"
                       >
                         {connector.label}
@@ -2747,13 +2712,16 @@ function App() {
 
             {connectorPreview ? (
               <g className="connector-preview" aria-hidden="true">
-                <line
+                <path
                   className="connector-preview-line"
+                  d={createConnectorPath(
+                    connectorPreview.start,
+                    connectorPreview.end,
+                    connectorPreview.fromPort,
+                    connectorPreview.toPort,
+                  )}
+                  fill="none"
                   markerEnd="url(#arrowhead)"
-                  x1={connectorPreview.start.x}
-                  x2={connectorPreview.end.x}
-                  y1={connectorPreview.start.y}
-                  y2={connectorPreview.end.y}
                 />
                 <circle
                   className="connector-preview-end"

@@ -1,3 +1,5 @@
+import { createConnectorPath, getConnectorLabelPoint } from './connectorRouting.js'
+
 export type ExportShapeKind = 'rectangle' | 'diamond' | 'ellipse' | 'text'
 export type ExportPortName = 'north' | 'east' | 'south' | 'west'
 
@@ -90,15 +92,17 @@ const connectorEndpoints = (
   connector: ExportConnector,
   from: ExportNode,
   to: ExportNode,
-): { start: Point; end: Point } => {
+): { start: Point; end: Point; fromPort: ExportPortName; toPort: ExportPortName } => {
   const fromCenter = { x: from.x + from.width / 2, y: from.y + from.height / 2 }
   const toCenter = { x: to.x + to.width / 2, y: to.y + to.height / 2 }
   const fromPort = connector.fromPort ?? nearestPort(from, toCenter)
   const toPort = connector.toPort ?? nearestPort(to, fromCenter)
 
   return {
-    start: getPortPoint(from, fromPort),
     end: getPortPoint(to, toPort),
+    fromPort,
+    start: getPortPoint(from, fromPort),
+    toPort,
   }
 }
 
@@ -175,22 +179,22 @@ const renderConnector = (
     return null
   }
 
-  const { start, end } = connectorEndpoints(connector, from, to)
+  const { start, end, fromPort, toPort } = connectorEndpoints(connector, from, to)
+  const connectorPath = createConnectorPath(start, end, fromPort, toPort)
+  const labelPoint = getConnectorLabelPoint(start, end, fromPort, toPort)
   const hasLabel =
     typeof connector.label === 'string' &&
     connector.label.trim() !== '' &&
     connector.showLabel !== false
   const labelText =
     hasLabel && typeof connector.label === 'string' ? escapeXml(connector.label.trim()) : ''
-  const labelX = formatNumber((start.x + end.x) / 2 + (connector.labelOffsetX ?? 0))
-  const labelY = formatNumber((start.y + end.y) / 2 + (connector.labelOffsetY ?? 0))
+  const labelX = formatNumber(labelPoint.x + (connector.labelOffsetX ?? 0))
+  const labelY = formatNumber(labelPoint.y + (connector.labelOffsetY ?? 0))
 
   return [
-    `<line class="connector-line" x1="${formatNumber(start.x)}" y1="${formatNumber(
-      start.y,
-    )}" x2="${formatNumber(end.x)}" y2="${formatNumber(end.y)}" stroke="${escapeXml(
+    `<path class="connector-line" d="${connectorPath}" stroke="${escapeXml(
       connector.stroke,
-    )}" stroke-width="3" stroke-linecap="round" marker-end="url(#mapsmith-arrowhead)" />`,
+    )}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#mapsmith-arrowhead)" />`,
     hasLabel
       ? `<text class="connector-label" x="${labelX}" y="${labelY}" text-anchor="middle" dominant-baseline="middle" font-size="12">${labelText}</text>`
       : '',

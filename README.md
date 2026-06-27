@@ -27,7 +27,7 @@ Mapsmith currently includes:
 - Deterministic board JSON round-trip verification
 - PNG and SVG export with board-aware, timestamped filenames
 - Inline board title editing (keeps exported names aligned to the active board)
-- Connector port editing, visible attachment hints, and optional connector labels
+- Routed connector paths with port editing, visible attachment hints, and optional labels
 - Local draft auto-save with one-click recovery and clear controls
 - Starter templates for blank, flowchart, system map, and process map
 - In-app licence and commercial-contact panel matching the repository licence posture
