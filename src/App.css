@@ -221,6 +221,7 @@
 
 .autosave-panel,
 .template-panel,
+.snap-panel,
 .import-help {
   display: grid;
   gap: 8px;
@@ -262,6 +263,42 @@
   border-radius: 6px;
   padding: 0 4px;
   background: #f8fafc;
+}
+
+.snap-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #182230;
+}
+
+.snap-toggle input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: #ff6b35;
+}
+
+.snap-toggle span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.snap-toggle strong {
+  font-size: 13px;
+  font-weight: 820;
+}
+
+.snap-toggle small {
+  color: #667085;
+  font-size: 12px;
+  font-weight: 720;
+}
+
+.snap-toggle input:focus-visible {
+  outline: 3px solid rgba(255, 107, 53, 0.3);
+  outline-offset: 2px;
 }
 
 .template-panel label {

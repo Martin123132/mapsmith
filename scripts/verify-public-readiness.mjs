@@ -14,6 +14,7 @@ const requireIncludes = (label, text, snippets) => {
 
 const files = {
   readme: await read('README.md'),
+  roadmap: await read('ROADMAP.md'),
   contributing: await read('CONTRIBUTING.md'),
   security: await read('SECURITY.md'),
   license: await read('LICENSE'),
@@ -24,6 +25,7 @@ const files = {
   releaseDryRun: await read('docs/RELEASE_DRY_RUN_EVIDENCE.md'),
   renderedQa: await read('docs/RENDERED_QA.md'),
   releaseDryRunGenerator: await read('scripts/generate-release-dry-run-evidence.mjs'),
+  snapGridVerifier: await read('scripts/verify-snap-grid.ts'),
   bugIssue: await read('.github/ISSUE_TEMPLATE/bug_report.yml'),
   exportIssue: await read('.github/ISSUE_TEMPLATE/export_import_issue.yml'),
   releaseIssue: await read('.github/ISSUE_TEMPLATE/release_readiness.yml'),
@@ -32,6 +34,7 @@ const files = {
   ci: await read('.github/workflows/ci.yml'),
   packageJson: await read('package.json'),
   app: await read('src/App.tsx'),
+  snapGrid: await read('src/snapGrid.ts'),
 }
 
 const packageData = JSON.parse(files.packageJson)
@@ -46,6 +49,14 @@ if (packageData.private !== true) {
 
 if (packageData.scripts?.['release:dry-run:evidence'] !== 'node scripts/generate-release-dry-run-evidence.mjs') {
   failures.push('package.json must keep release:dry-run:evidence alias')
+}
+
+if (!packageData.scripts?.check?.includes('npm run verify:snap-grid')) {
+  failures.push('package.json check script must include verify:snap-grid')
+}
+
+if (!packageData.scripts?.['verify:snap-grid']?.includes('scripts/verify-snap-grid.ts')) {
+  failures.push('package.json must keep verify:snap-grid alias')
 }
 
 requireIncludes('README.md', files.readme, [
@@ -65,6 +76,21 @@ requireIncludes('README.md', files.readme, [
   'TWO HANDS NETWORK LTD',
   'local-first',
   'npm run verify:import-smoke',
+  'snap-to-grid drag/resize',
+  'Deterministic snap-grid proof',
+  'npm run verify:snap-grid',
+  'SaaS replacement map',
+  'release review boards',
+])
+
+requireIncludes('ROADMAP.md', files.roadmap, [
+  'Mapsmith Roadmap',
+  'source-available',
+  'SaaS replacement',
+  'release review',
+  'snap-to-grid movement and resizing',
+  'demo-safe example diagrams',
+  'No account requirement',
 ])
 
 requireIncludes('LICENSE', files.license, [
@@ -104,10 +130,15 @@ requireIncludes('docs/ARCHITECTURE.md', files.architecture, [
   'src/boardFile.ts',
   'src/connectorRouting.ts',
   'src/svgExport.ts',
+  'src/snapGrid.ts',
   'Board Model',
   'Editor State',
   'Canvas Interactions',
   'orthogonal routed connector paths',
+  'snap-to-grid creation, dragging, and resizing',
+  'snap-grid proof',
+  'local editor preference only',
+  'does not change the board schema',
   'Local Persistence',
   'npm run check',
   'RENDERED_QA.md',
@@ -124,6 +155,26 @@ requireIncludes('src/App.tsx', files.app, [
   'COMMERCIAL-LICENSE.md',
   'NOTICE.md',
   'Personal/non-commercial use. Commercial license: TWO HANDS NETWORK LTD',
+  'SNAP_SIZE',
+  'snapToGrid',
+  'SaaS replacement map',
+  'Release review board',
+])
+
+requireIncludes('src/snapGrid.ts', files.snapGrid, [
+  'SNAP_SIZE',
+  'snapValue',
+  'snapPoint',
+  'snapNodePosition',
+  'snapNodeFrame',
+  'getMinNodeSize',
+])
+
+requireIncludes('scripts/verify-snap-grid.ts', files.snapGridVerifier, [
+  'Snap grid proof passed',
+  'negative x coordinates snap to the nearest grid line',
+  'text frame respects minimum width',
+  'snap helpers must not mutate input nodes',
 ])
 
 requireIncludes('CONTRIBUTING.md', files.contributing, [
@@ -149,6 +200,7 @@ requireIncludes('docs/RELEASE_CHECKLIST.md', files.releaseChecklist, [
   'npm run check',
   'npm run verify:examples',
   'npm run verify:public',
+  'npm run verify:snap-grid',
   'npm audit --omit=dev',
   'GitHub CI URL is recorded in the dry-run evidence.',
   'Rendered smoke from [RENDERED_QA.md](RENDERED_QA.md)',
@@ -158,6 +210,7 @@ requireIncludes('docs/RELEASE_CHECKLIST.md', files.releaseChecklist, [
   'No public release, package publish, or asset upload',
   'examples/portable-flow.mapsmith',
   'checked open/export/save walkthrough',
+  'Snap-grid proof remains synthetic and deterministic.',
   'CI is green on `main`',
   'release readiness issue template',
   'Release notes do not mention private branches',
@@ -185,9 +238,11 @@ requireIncludes('docs/RELEASE_DRY_RUN_EVIDENCE.md', files.releaseDryRun, [
   'GitHub CI URL:',
   '`npm run verify:examples`',
   '`npm run verify:public`',
+  '`npm run verify:snap-grid`',
   '`npm audit --omit=dev`',
   '`npm run check`',
   'examples/portable-flow.mapsmith',
+  'Snap-grid proof uses synthetic node data only.',
   'SVG/export proof contains only synthetic labels.',
   'no private paths, secrets, credentials, tokens, private URLs, or real customer diagrams',
   'No public release was created.',
@@ -203,9 +258,11 @@ requireIncludes('scripts/generate-release-dry-run-evidence.mjs', files.releaseDr
   'GitHub CI URL: <paste GitHub Actions run URL>',
   '\\`npm run verify:examples\\`',
   '\\`npm run verify:public\\`',
+  '\\`npm run verify:snap-grid\\`',
   '\\`npm audit --omit=dev\\`',
   '\\`npm run check\\`',
   'examples/portable-flow.mapsmith',
+  'Snap-grid proof uses synthetic node data only.',
   'SVG/export proof contains only synthetic labels.',
   'no private paths, secrets, credentials, tokens, private URLs, or real customer diagrams',
   'No public release was created.',

@@ -31,6 +31,9 @@ Record the result and any public-safe notes.
 - [ ] `npm run verify:public`
   - Result:
   - Notes:
+- [ ] `npm run verify:snap-grid`
+  - Result:
+  - Notes:
 - [ ] `npm audit --omit=dev`
   - Result:
   - Notes:
@@ -43,6 +46,7 @@ Record the result and any public-safe notes.
 - [ ] `examples/portable-flow.mapsmith` remains synthetic/demo-only.
 - [ ] The checked open/export/save walkthrough is current.
 - [ ] `.mapsmith` save/open round-trip proof is still represented by the checked fixtures.
+- [ ] Snap-grid proof uses synthetic node data only.
 - [ ] SVG/export proof contains only synthetic labels.
 - [ ] Proof material contains no private paths, secrets, credentials, tokens, private URLs, or real customer diagrams.
 

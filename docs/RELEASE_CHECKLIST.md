@@ -20,6 +20,7 @@ Record dry-run outcomes with [RELEASE_DRY_RUN_EVIDENCE.md](RELEASE_DRY_RUN_EVIDE
 - [ ] `npm run check`
 - [ ] `npm run verify:examples`
 - [ ] `npm run verify:public`
+- [ ] `npm run verify:snap-grid`
 - [ ] `npm audit --omit=dev`
 - [ ] GitHub CI URL is recorded in the dry-run evidence.
 - [ ] Rendered smoke from [RENDERED_QA.md](RENDERED_QA.md): app loads without console/page errors.
@@ -32,6 +33,7 @@ Record dry-run outcomes with [RELEASE_DRY_RUN_EVIDENCE.md](RELEASE_DRY_RUN_EVIDE
 - [ ] Legacy `.canvasforge` import behavior is still intentional.
 - [ ] `examples/portable-flow.mapsmith` remains synthetic, parser-verified, and path-free.
 - [ ] The checked open/export/save walkthrough remains current.
+- [ ] Snap-grid proof remains synthetic and deterministic.
 - [ ] Any schema change has a migration note or compatibility explanation.
 
 ## GitHub

@@ -9,6 +9,7 @@ Mapsmith is a local-first React/Vite diagram editor. The app is source-available
 - `src/connectorRouting.ts`: shared orthogonal connector routing and label-point helpers used by the editor and SVG export.
 - `src/svgExport.ts`: deterministic SVG export renderer used by browser export and verification scripts.
 - `src/connectorLabelShortcuts.ts`: pure helpers for connector label visibility and keyboard nudging.
+- `src/snapGrid.ts`: pure snap-to-grid helpers used by direct manipulation and deterministic alignment proof.
 - `src/App.css`: responsive app shell, canvas, side panels, inspectors, shortcut panel, and connector affordances.
 
 ## Board Model
@@ -40,6 +41,7 @@ The editor keeps local React state for:
 - active tool,
 - undo/redo stacks,
 - connector source and live preview point,
+- snap-to-grid UI preference,
 - autosave status and unsaved-change status.
 
 Board mutations flow through `updateBoard` or `recordBoardSnapshot` so undo/redo, autosave, and unsaved-change detection stay aligned.
@@ -51,6 +53,7 @@ The native SVG canvas handles:
 - shape creation,
 - node dragging,
 - resize handles,
+- snap-to-grid creation, dragging, and resizing,
 - panning and zooming,
 - connector creation,
 - orthogonal routed connector paths,
@@ -59,6 +62,8 @@ The native SVG canvas handles:
 - selected connector port reassignment and label controls.
 
 The SVG canvas remains the source of interaction. Exported SVG is generated independently through `src/svgExport.ts` so exports stay deterministic and testable.
+
+Snap-to-grid is a local editor preference only. It affects direct manipulation while the editor is open, but it is not written into `.mapsmith` files and does not change the board schema.
 
 ## Local Persistence
 
@@ -79,7 +84,7 @@ The main gate is:
 npm run check
 ```
 
-It runs lint, production build, deterministic SVG proof, board round-trip proof, example proof, import smoke proof, connector shortcut proof, and public-readiness docs proof.
+It runs lint, production build, deterministic SVG proof, board round-trip proof, example proof, import smoke proof, connector shortcut proof, snap-grid proof, and public-readiness docs proof.
 
 Other useful commands:
 
@@ -88,6 +93,7 @@ npm run audit
 npm run verify:examples
 npm run verify:import-smoke
 npm run verify:public
+npm run verify:snap-grid
 ```
 
 Rendered browser QA is documented in [RENDERED_QA.md](RENDERED_QA.md). Local screenshots and logs should stay under `D:\Codex\revenge-tour\mapsmith\node_modules\.tmp\rendered-qa` on this machine.

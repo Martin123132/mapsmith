@@ -20,16 +20,17 @@ Mapsmith is a local-first, source-available diagram editor for fast visual maps,
 Mapsmith currently includes:
 
 - Shape, text, and connector tools
-- Selection, drag movement, resize handles, and keyboard nudging
+- Selection, snap-to-grid drag/resize, resize handles, and keyboard nudging
 - Named connector ports for north, east, south, and west attachment points
 - Shortcut help overlay for selection, nudge, resize, ports, save, open, and export
 - Local `.mapsmith` save/open flow with legacy `.canvasforge` import support
 - Deterministic board JSON round-trip verification
+- Deterministic snap-grid proof for editor alignment behavior
 - PNG and SVG export with board-aware, timestamped filenames
 - Inline board title editing (keeps exported names aligned to the active board)
 - Routed connector paths with port editing, visible attachment hints, and optional labels
 - Local draft auto-save with one-click recovery and clear controls
-- Starter templates for blank, flowchart, system map, and process map
+- Starter templates for blank, flowchart, system map, process map, SaaS replacement map, and release review boards
 - In-app licence and commercial-contact panel matching the repository licence posture
 - Responsive editor layout for desktop and small screens
 
@@ -46,7 +47,7 @@ See [examples/](examples/) for a tiny synthetic `.mapsmith` board and checked [o
 The short version:
 
 - Improve connector routing and label editing
-- Add richer board templates and example diagrams
+- Expand example diagrams and proof fixtures
 - Improve export naming and add more fixture coverage
 - Add import/export hardening tests
 - Package a stable first public release
@@ -78,6 +79,7 @@ npm run audit
 npm run verify:board
 npm run verify:examples
 npm run verify:import-smoke
+npm run verify:snap-grid
 npm run verify:svg
 ```
 

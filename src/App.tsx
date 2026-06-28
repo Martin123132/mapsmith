@@ -44,6 +44,13 @@ import {
   resetConnectorLabelOffset,
   toggleConnectorLabelVisibility,
 } from './connectorLabelShortcuts'
+import {
+  SNAP_SIZE,
+  getMinNodeSize,
+  snapNodeFrame,
+  snapNodePosition,
+  snapPoint,
+} from './snapGrid'
 
 const boardName = 'Mapsmith demo board'
 const AUTOSAVE_KEY = 'mapsmith-board-draft-v1'
@@ -133,7 +140,13 @@ const tools: Array<{
   { icon: Waypoints, label: 'Connector', tool: 'connector' },
 ]
 
-type TemplateId = 'blank' | 'flowchart' | 'system-map' | 'process-map'
+type TemplateId =
+  | 'blank'
+  | 'flowchart'
+  | 'system-map'
+  | 'process-map'
+  | 'saas-map'
+  | 'release-review'
 
 type BoardTemplate = {
   id: TemplateId
@@ -612,6 +625,289 @@ const createProcessTemplate = (): Board => ({
   ],
 })
 
+const createSaasMapTemplate = (): Board => ({
+  name: 'SaaS replacement map',
+  nodes: [
+    {
+      id: 'saas-title',
+      kind: 'text',
+      x: -500,
+      y: -246,
+      width: 440,
+      height: 54,
+      fill: 'transparent',
+      stroke: '#111827',
+      text: 'SaaS replacement map',
+      fontSize: 30,
+    },
+    {
+      id: 'saas-need',
+      kind: 'rectangle',
+      x: -500,
+      y: -120,
+      width: 220,
+      height: 88,
+      fill: '#fff4d6',
+      stroke: '#1f2937',
+      text: 'User need',
+      fontSize: 19,
+    },
+    {
+      id: 'saas-local',
+      kind: 'rectangle',
+      x: -170,
+      y: -120,
+      width: 230,
+      height: 88,
+      fill: '#dff3ff',
+      stroke: '#26547c',
+      text: 'Local-first tool',
+      fontSize: 19,
+    },
+    {
+      id: 'saas-files',
+      kind: 'diamond',
+      x: 170,
+      y: -126,
+      width: 230,
+      height: 104,
+      fill: '#ffe5ec',
+      stroke: '#5f0f40',
+      text: 'Portable files?',
+      fontSize: 18,
+    },
+    {
+      id: 'saas-export',
+      kind: 'rectangle',
+      x: 520,
+      y: -120,
+      width: 230,
+      height: 88,
+      fill: '#dcfce7',
+      stroke: '#1b4332',
+      text: 'Clean export',
+      fontSize: 19,
+    },
+    {
+      id: 'saas-proof',
+      kind: 'ellipse',
+      x: -170,
+      y: 92,
+      width: 230,
+      height: 88,
+      fill: '#f1ede2',
+      stroke: '#6c584c',
+      text: 'Public proof',
+      fontSize: 19,
+    },
+    {
+      id: 'saas-maintain',
+      kind: 'ellipse',
+      x: 170,
+      y: 92,
+      width: 230,
+      height: 88,
+      fill: '#ffffff',
+      stroke: '#344054',
+      text: 'Maintainer loop',
+      fontSize: 18,
+    },
+  ],
+  connectors: [
+    {
+      id: 'saas-c-1',
+      from: 'saas-need',
+      to: 'saas-local',
+      fromPort: 'east',
+      toPort: 'west',
+      label: 'build',
+      stroke: '#26547c',
+    },
+    {
+      id: 'saas-c-2',
+      from: 'saas-local',
+      to: 'saas-files',
+      fromPort: 'east',
+      toPort: 'west',
+      label: 'save',
+      stroke: '#5f0f40',
+    },
+    {
+      id: 'saas-c-3',
+      from: 'saas-files',
+      to: 'saas-export',
+      fromPort: 'east',
+      toPort: 'west',
+      label: 'export',
+      stroke: '#1b4332',
+    },
+    {
+      id: 'saas-c-4',
+      from: 'saas-local',
+      to: 'saas-proof',
+      fromPort: 'south',
+      toPort: 'north',
+      label: 'verify',
+      stroke: '#6c584c',
+    },
+    {
+      id: 'saas-c-5',
+      from: 'saas-proof',
+      to: 'saas-maintain',
+      fromPort: 'east',
+      toPort: 'west',
+      label: 'iterate',
+      stroke: '#344054',
+    },
+    {
+      id: 'saas-c-6',
+      from: 'saas-maintain',
+      to: 'saas-files',
+      fromPort: 'north',
+      toPort: 'south',
+      label: 'harden',
+      stroke: '#111827',
+    },
+  ],
+})
+
+const createReleaseReviewTemplate = (): Board => ({
+  name: 'Release review board',
+  nodes: [
+    {
+      id: 'release-title',
+      kind: 'text',
+      x: -430,
+      y: -236,
+      width: 430,
+      height: 54,
+      fill: 'transparent',
+      stroke: '#111827',
+      text: 'First release review',
+      fontSize: 30,
+    },
+    {
+      id: 'release-demo',
+      kind: 'rectangle',
+      x: -430,
+      y: -116,
+      width: 220,
+      height: 86,
+      fill: '#dff3ff',
+      stroke: '#26547c',
+      text: 'Demo board',
+      fontSize: 19,
+    },
+    {
+      id: 'release-export',
+      kind: 'rectangle',
+      x: -110,
+      y: -116,
+      width: 220,
+      height: 86,
+      fill: '#fff4d6',
+      stroke: '#1f2937',
+      text: 'SVG proof',
+      fontSize: 19,
+    },
+    {
+      id: 'release-docs',
+      kind: 'rectangle',
+      x: 210,
+      y: -116,
+      width: 220,
+      height: 86,
+      fill: '#dcfce7',
+      stroke: '#1b4332',
+      text: 'Public docs',
+      fontSize: 19,
+    },
+    {
+      id: 'release-ci',
+      kind: 'diamond',
+      x: -110,
+      y: 62,
+      width: 220,
+      height: 112,
+      fill: '#ffe5ec',
+      stroke: '#5f0f40',
+      text: 'CI green?',
+      fontSize: 19,
+    },
+    {
+      id: 'release-evidence',
+      kind: 'ellipse',
+      x: 210,
+      y: 80,
+      width: 220,
+      height: 84,
+      fill: '#f1ede2',
+      stroke: '#6c584c',
+      text: 'Dry-run evidence',
+      fontSize: 18,
+    },
+    {
+      id: 'release-hold',
+      kind: 'rectangle',
+      x: -430,
+      y: 80,
+      width: 220,
+      height: 84,
+      fill: '#ffffff',
+      stroke: '#344054',
+      text: 'No publish yet',
+      fontSize: 19,
+    },
+  ],
+  connectors: [
+    {
+      id: 'release-c-1',
+      from: 'release-demo',
+      to: 'release-export',
+      fromPort: 'east',
+      toPort: 'west',
+      label: 'open',
+      stroke: '#26547c',
+    },
+    {
+      id: 'release-c-2',
+      from: 'release-export',
+      to: 'release-docs',
+      fromPort: 'east',
+      toPort: 'west',
+      label: 'document',
+      stroke: '#1b4332',
+    },
+    {
+      id: 'release-c-3',
+      from: 'release-docs',
+      to: 'release-evidence',
+      fromPort: 'south',
+      toPort: 'north',
+      label: 'record',
+      stroke: '#6c584c',
+    },
+    {
+      id: 'release-c-4',
+      from: 'release-export',
+      to: 'release-ci',
+      fromPort: 'south',
+      toPort: 'north',
+      label: 'check',
+      stroke: '#5f0f40',
+    },
+    {
+      id: 'release-c-5',
+      from: 'release-ci',
+      to: 'release-hold',
+      fromPort: 'west',
+      toPort: 'east',
+      label: 'hold',
+      stroke: '#344054',
+    },
+  ],
+})
+
 const boardTemplates: BoardTemplate[] = [
   {
     id: 'blank',
@@ -636,6 +932,18 @@ const boardTemplates: BoardTemplate[] = [
     name: 'Process map starter',
     description: 'Input-to-release process lane with QA loop',
     createBoard: createProcessTemplate,
+  },
+  {
+    id: 'saas-map',
+    name: 'SaaS replacement map',
+    description: 'Synthetic product map for local-first replacement planning',
+    createBoard: createSaasMapTemplate,
+  },
+  {
+    id: 'release-review',
+    name: 'Release review board',
+    description: 'Demo-safe first-release review map with proof checkpoints',
+    createBoard: createReleaseReviewTemplate,
   },
 ]
 
@@ -854,26 +1162,25 @@ const areBoardsEqual = (left: Board, right: Board) =>
   JSON.stringify(left) === JSON.stringify(right)
 
 const resizeNode = (node: DiagramNode, handle: ResizeHandle, delta: Point): DiagramNode => {
-  const minWidth = node.kind === 'text' ? 120 : 96
-  const minHeight = node.kind === 'text' ? 36 : 56
+  const minSize = getMinNodeSize(node)
   const next = { ...node }
 
   if (handle.includes('e')) {
-    next.width = Math.max(minWidth, node.width + delta.x)
+    next.width = Math.max(minSize.width, node.width + delta.x)
   }
 
   if (handle.includes('s')) {
-    next.height = Math.max(minHeight, node.height + delta.y)
+    next.height = Math.max(minSize.height, node.height + delta.y)
   }
 
   if (handle.includes('w')) {
-    const nextWidth = Math.max(minWidth, node.width - delta.x)
+    const nextWidth = Math.max(minSize.width, node.width - delta.x)
     next.x = node.x + node.width - nextWidth
     next.width = nextWidth
   }
 
   if (handle.includes('n')) {
-    const nextHeight = Math.max(minHeight, node.height - delta.y)
+    const nextHeight = Math.max(minSize.height, node.height - delta.y)
     next.y = node.y + node.height - nextHeight
     next.height = nextHeight
   }
@@ -886,11 +1193,10 @@ const resizeNodeByKeyboard = (
   direction: 'left' | 'right' | 'up' | 'down',
   step: number,
 ): DiagramNode => {
-  const minWidth = node.kind === 'text' ? 120 : 96
-  const minHeight = node.kind === 'text' ? 36 : 56
+  const minSize = getMinNodeSize(node)
 
   if (direction === 'left') {
-    return { ...node, width: Math.max(minWidth, node.width - step) }
+    return { ...node, width: Math.max(minSize.width, node.width - step) }
   }
 
   if (direction === 'right') {
@@ -898,7 +1204,7 @@ const resizeNodeByKeyboard = (
   }
 
   if (direction === 'up') {
-    return { ...node, height: Math.max(minHeight, node.height - step) }
+    return { ...node, height: Math.max(minSize.height, node.height - step) }
   }
 
   return { ...node, height: node.height + step }
@@ -1033,9 +1339,12 @@ function App() {
   const [showShortcuts, setShowShortcuts] = useState(false)
   const [boardTitleDraft, setBoardTitleDraft] = useState(initialDraft?.board.name ?? boardName)
   const [templateId, setTemplateId] = useState<TemplateId>('flowchart')
+  const [snapToGrid, setSnapToGrid] = useState(true)
   const [history, setHistory] = useState<Board[]>(() => [boardSnapshot(initialBoard)])
   const [future, setFuture] = useState<Board[]>([])
   const dragStartBoardRef = useRef<Board | null>(null)
+  const dragStateRef = useRef<DragState | null>(null)
+  const snapToGridRef = useRef(snapToGrid)
   const [autosaveState, setAutosaveState] = useState<AutosaveState>(() => ({
     hasDraft: Boolean(initialDraft),
     savedAt: initialDraft?.savedAt ?? null,
@@ -1073,6 +1382,7 @@ function App() {
   )
 
   const elementCount = board.nodes.length + board.connectors.length
+  const snapModeLabel = snapToGrid ? `${SNAP_SIZE}px grid` : 'Free'
   const shortcutHint = useMemo(() => {
     if (selectedConnector) {
       return 'Connector shortcuts: arrows move label, Shift+arrows=10px, N/E/S/W set source port, Shift+N/E/S/W set target port, L toggles label, 0 resets offset'
@@ -1196,6 +1506,10 @@ function App() {
   useEffect(() => {
     boardRef.current = board
   }, [board])
+
+  useEffect(() => {
+    snapToGridRef.current = snapToGrid
+  }, [snapToGrid])
 
   useEffect(() => {
     if (!hasUnsavedChanges) {
@@ -1383,21 +1697,36 @@ function App() {
   )
 
   const recordBoardSnapshot = useCallback(
-    (status = 'Edited in memory', previousBoard: Board | null = null) => {
+    (
+      status = 'Edited in memory',
+      previousBoard: Board | null = null,
+      finalizeCurrent?: (current: Board) => Board,
+    ) => {
       if (!previousBoard) {
         markBoardChange(status)
         return
       }
 
+      let nextBoardForSync: Board | null = null
       setBoard((current) => {
-        const normalizedCurrent = boardSnapshot(normalizeBoard(current))
+        const finalizedCurrent = finalizeCurrent ? finalizeCurrent(current) : current
+        const normalizedCurrent = boardSnapshot(normalizeBoard(finalizedCurrent))
         pushBoardHistory(previousBoard, normalizedCurrent)
-        return current
+        nextBoardForSync = normalizedCurrent
+        return normalizedCurrent
       })
+      if (nextBoardForSync) {
+        syncUnsavedState(nextBoardForSync)
+      }
       markBoardChange(status)
     },
-    [markBoardChange, pushBoardHistory],
+    [markBoardChange, pushBoardHistory, syncUnsavedState],
   )
+  const setActiveDragState = useCallback((nextDragState: DragState | null) => {
+    dragStateRef.current = nextDragState
+    setDragState(nextDragState)
+  }, [])
+
   const reportSelection = useCallback(
     (item: SelectableBoardItem | null, position: number | null = null) => {
       if (!item || position === null || position < 0 || selectableItems.length === 0) {
@@ -1706,7 +2035,7 @@ function App() {
 
       if (tool === 'pan') {
         hasDraggedRef.current = false
-        setDragState({
+        setActiveDragState({
           mode: 'pan',
           startClientX: event.clientX,
           startClientY: event.clientY,
@@ -1717,7 +2046,8 @@ function App() {
       }
 
       if (tool === 'rectangle' || tool === 'diamond' || tool === 'ellipse' || tool === 'text') {
-        const node = createNode(tool, point)
+        const createdNode = createNode(tool, point)
+        const node = snapToGrid ? snapNodePosition(createdNode) : createdNode
         updateBoard(
           (current) => ({
             ...current,
@@ -1735,7 +2065,7 @@ function App() {
       setSelectedConnectorId('')
       setConnectorStartId(null)
     },
-    [screenToWorld, tool, updateBoard, view],
+    [screenToWorld, setActiveDragState, snapToGrid, tool, updateBoard, view],
   )
 
   const handleNodePointerDown = useCallback(
@@ -1788,7 +2118,7 @@ function App() {
       canvasRef.current?.focus()
       hasDraggedRef.current = false
       dragStartBoardRef.current = boardSnapshot(boardRef.current)
-      setDragState({
+      setActiveDragState({
         mode: 'node',
         id: node.id,
         offsetX: point.x - node.x,
@@ -1796,7 +2126,16 @@ function App() {
       })
       setStatus('Selected node')
     },
-    [connectorStartId, nodeMap, screenToWorld, tool, reportSelection, selectableItems, updateBoard],
+    [
+      connectorStartId,
+      nodeMap,
+      screenToWorld,
+      setActiveDragState,
+      tool,
+      reportSelection,
+      selectableItems,
+      updateBoard,
+    ],
   )
 
   const handleResizePointerDown = useCallback(
@@ -1808,7 +2147,7 @@ function App() {
       canvasRef.current?.focus()
       hasDraggedRef.current = false
       dragStartBoardRef.current = boardSnapshot(boardRef.current)
-      setDragState({
+      setActiveDragState({
         mode: 'resize',
         id: node.id,
         handle,
@@ -1817,7 +2156,7 @@ function App() {
       })
       setStatus('Resizing node')
     },
-    [screenToWorld],
+    [screenToWorld, setActiveDragState],
   )
 
   const handleConnectorPointerDown = useCallback(
@@ -1838,41 +2177,42 @@ function App() {
 
   const handlePointerMove = useCallback(
     (event: ReactPointerEvent<SVGSVGElement>) => {
-      if (!dragState) {
+      const activeDragState = dragStateRef.current
+      const isSnapEnabled = snapToGridRef.current
+
+      if (!activeDragState) {
         if (tool === 'connector' && connectorStartId) {
           setConnectorPreviewPoint(screenToWorld(event.clientX, event.clientY))
         }
         return
       }
 
-      if (dragState.mode === 'pan') {
+      if (activeDragState.mode === 'pan') {
         hasDraggedRef.current = true
-        const dx = (event.clientX - dragState.startClientX) / dragState.startView.zoom
-        const dy = (event.clientY - dragState.startClientY) / dragState.startView.zoom
+        const dx = (event.clientX - activeDragState.startClientX) / activeDragState.startView.zoom
+        const dy = (event.clientY - activeDragState.startClientY) / activeDragState.startView.zoom
         setView({
-          ...dragState.startView,
-          x: dragState.startView.x - dx,
-          y: dragState.startView.y - dy,
+          ...activeDragState.startView,
+          x: activeDragState.startView.x - dx,
+          y: activeDragState.startView.y - dy,
         })
         return
       }
 
-      if (dragState.mode === 'resize') {
+      if (activeDragState.mode === 'resize') {
         hasDraggedRef.current = true
         const point = screenToWorld(event.clientX, event.clientY)
         const delta = {
-          x: point.x - dragState.startPoint.x,
-          y: point.y - dragState.startPoint.y,
+          x: point.x - activeDragState.startPoint.x,
+          y: point.y - activeDragState.startPoint.y,
         }
+        const resizedNode = resizeNode(activeDragState.startNode, activeDragState.handle, delta)
+        const nextNode = isSnapEnabled ? snapNodeFrame(resizedNode) : resizedNode
         let nextBoard: Board | null = null
         setBoard((current) => {
           const next = {
             ...current,
-            nodes: current.nodes.map((node) =>
-              node.id === dragState.id
-                ? resizeNode(dragState.startNode, dragState.handle, delta)
-                : node,
-            ),
+            nodes: current.nodes.map((node) => (node.id === activeDragState.id ? nextNode : node)),
           }
           nextBoard = next
           return next
@@ -1881,22 +2221,27 @@ function App() {
           syncUnsavedState(nextBoard)
         }
         setLastChanged(nowLabel())
-        setStatus('Resizing node')
+        setStatus(isSnapEnabled ? 'Resizing node on grid' : 'Resizing node')
         return
       }
 
       const point = screenToWorld(event.clientX, event.clientY)
+      const rawPosition = {
+        x: point.x - activeDragState.offsetX,
+        y: point.y - activeDragState.offsetY,
+      }
+      const position = isSnapEnabled ? snapPoint(rawPosition) : rawPosition
       hasDraggedRef.current = true
       let nextBoard: Board | null = null
       setBoard((current) => {
         nextBoard = {
           ...current,
           nodes: current.nodes.map((node) =>
-            node.id === dragState.id
+            node.id === activeDragState.id
               ? {
                   ...node,
-                  x: point.x - dragState.offsetX,
-                  y: point.y - dragState.offsetY,
+                  x: position.x,
+                  y: position.y,
                 }
               : node,
           ),
@@ -1907,22 +2252,42 @@ function App() {
         syncUnsavedState(nextBoard)
       }
       setLastChanged(nowLabel())
-      setStatus('Moving node')
+      setStatus(isSnapEnabled ? 'Moving node on grid' : 'Moving node')
     },
-    [connectorStartId, dragState, screenToWorld, syncUnsavedState, tool],
+    [connectorStartId, screenToWorld, syncUnsavedState, tool],
   )
 
   const handlePointerUp = useCallback(() => {
-    if (dragState?.mode === 'resize' && hasDraggedRef.current) {
-      recordBoardSnapshot('Resized node', dragStartBoardRef.current)
-    } else if (dragState?.mode === 'node' && hasDraggedRef.current) {
-      recordBoardSnapshot('Moved node', dragStartBoardRef.current)
-    } else if (dragState?.mode === 'pan' && hasDraggedRef.current) {
+    const activeDragState = dragStateRef.current
+    const shouldSnapOnPointerUp = snapToGrid
+    if (activeDragState?.mode === 'resize' && hasDraggedRef.current) {
+      recordBoardSnapshot('Resized node', dragStartBoardRef.current, (current) =>
+        shouldSnapOnPointerUp
+          ? {
+              ...current,
+              nodes: current.nodes.map((node) =>
+                node.id === activeDragState.id ? snapNodeFrame(node) : node,
+              ),
+            }
+          : current,
+      )
+    } else if (activeDragState?.mode === 'node' && hasDraggedRef.current) {
+      recordBoardSnapshot('Moved node', dragStartBoardRef.current, (current) =>
+        shouldSnapOnPointerUp
+          ? {
+              ...current,
+              nodes: current.nodes.map((node) =>
+                node.id === activeDragState.id ? snapNodePosition(node) : node,
+              ),
+            }
+          : current,
+      )
+    } else if (activeDragState?.mode === 'pan' && hasDraggedRef.current) {
       setStatus('Board panned')
     }
     dragStartBoardRef.current = null
-    setDragState(null)
-  }, [dragState, recordBoardSnapshot])
+    setActiveDragState(null)
+  }, [recordBoardSnapshot, setActiveDragState, snapToGrid])
 
   const saveBoard = useCallback(() => {
     const seed = exportTimeStem()
@@ -2373,6 +2738,10 @@ function App() {
               <dd>{elementCount}</dd>
             </div>
             <div>
+              <dt>Snap</dt>
+              <dd>{snapModeLabel}</dd>
+            </div>
+            <div>
               <dt>Changed</dt>
               <dd>{lastChanged}</dd>
             </div>
@@ -2387,6 +2756,26 @@ function App() {
               <dd>{status}</dd>
             </div>
           </dl>
+
+          <section className="snap-panel" aria-label="Canvas alignment">
+            <label className="snap-toggle">
+              <input
+                aria-label="Snap to grid"
+                checked={snapToGrid}
+                type="checkbox"
+                onChange={(event) => {
+                  const nextSnapToGrid = event.target.checked
+                  snapToGridRef.current = nextSnapToGrid
+                  setSnapToGrid(nextSnapToGrid)
+                  setStatus(nextSnapToGrid ? 'Snap grid enabled' : 'Free movement enabled')
+                }}
+              />
+              <span>
+                <strong>Snap grid</strong>
+                <small>{snapToGrid ? `${SNAP_SIZE}px movement` : 'Free movement'}</small>
+              </span>
+            </label>
+          </section>
 
           <section className="autosave-panel" aria-label="Local draft recovery">
             <h3>Local draft</h3>

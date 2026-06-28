@@ -32,17 +32,21 @@ This is a dry-run evidence document only. It does not create a public release, u
 - [ ] \`npm run verify:public\`
   - Result: <pass/fail>
   - Notes: Confirms public readiness docs, templates, source-available personal/non-commercial licence posture, commercial licensing notes, and release-readiness guardrails stay present.
+- [ ] \`npm run verify:snap-grid\`
+  - Result: <pass/fail>
+  - Notes: Confirms direct manipulation snap-grid math, min node sizes, and immutable helper behavior stay covered.
 - [ ] \`npm audit --omit=dev\`
   - Result: <pass/fail>
   - Notes: Record dependency audit result.
 - [ ] \`npm run check\`
   - Result: <pass/fail>
-  - Notes: Confirms lint, build, SVG proof, board round-trip proof, example proof, and public readiness proof.
+  - Notes: Confirms lint, build, SVG proof, board round-trip proof, example proof, import smoke proof, connector shortcut proof, snap-grid proof, and public readiness proof.
 
 ## Demo-Safe Proof
 
 - [ ] \`examples/portable-flow.mapsmith\` remains synthetic/demo-only.
 - [ ] The checked open/export/save walkthrough is current.
+- [ ] Snap-grid proof uses synthetic node data only.
 - [ ] SVG/export proof contains only synthetic labels.
 - [ ] Proof material contains no private paths, secrets, credentials, tokens, private URLs, or real customer diagrams.
 
