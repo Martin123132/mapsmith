@@ -297,8 +297,10 @@ requireIncludes('release readiness issue template', files.releaseIssue, [
   '`npm run check` passes.',
   '`npm run verify:examples` passes.',
   '`npm run verify:public` passes.',
+  '`npm run verify:snap-grid` passes.',
   '`npm audit --omit=dev` reports no vulnerabilities.',
   'examples/portable-flow.mapsmith',
+  'Snap-grid proof uses synthetic node data only.',
   'SVG/export proof material contains no private paths, secrets, or real customer diagrams.',
 ])
 

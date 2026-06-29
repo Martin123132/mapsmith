@@ -30,6 +30,8 @@ body:
           required: true
         - label: `npm run verify:public` passes.
           required: true
+        - label: `npm run verify:snap-grid` passes.
+          required: true
         - label: `npm audit --omit=dev` reports no vulnerabilities.
           required: true
         - label: GitHub Actions is green on `main`.
@@ -42,6 +44,8 @@ body:
         - label: `examples/portable-flow.mapsmith` remains synthetic/demo-only.
           required: true
         - label: The checked open/export/save walkthrough is current.
+          required: true
+        - label: Snap-grid proof uses synthetic node data only.
           required: true
         - label: SVG/export proof material contains no private paths, secrets, or real customer diagrams.
           required: true
